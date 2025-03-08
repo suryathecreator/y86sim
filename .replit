@@ -1,0 +1,8 @@
+modules = ["c-clang14"]
+run = "gcc add3numbers.s"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "gcc add3numbers.s"]
