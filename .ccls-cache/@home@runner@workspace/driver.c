@@ -30,9 +30,9 @@ Bryant, Randal E., and David R. O'Hallaron. Computer Systems: A Programmer's Per
 
 char* interface();
 void file_parsing(char*);
-outputnode assemble(inputnode*);
 int reg_num(char*);
 void commandLinkedList(inputnode*, Queue*);
+outputnode assemble(inputnode*);
 
 int main()
 {
@@ -88,7 +88,8 @@ void file_parsing(char *filename) {
             printf("\n");
         }
     }*/
-    fclose(file);
+    }
+fclose(file);
 }
 
 /*
@@ -139,21 +140,21 @@ to separate the first and second arg. We can map after with a quick helper
 */
 int reg_num(char *reg)
 {
-    if (strcmp(reg, "%rax") == 0) return 0;
-    else if (strcmp(reg, "%rcx") == 0) return 1;
-    else if (strcmp(reg, "%rdx") == 0) return 2;
-    else if (strcmp(reg, "%rbx") == 0) return 3;
-    else if (strcmp(reg, "%rsp") == 0) return 4;
-    else if (strcmp(reg, "%rbp") == 0) return 5;
-    else if (strcmp(reg, "%rsi") == 0) return 6;
-    else if (strcmp(reg, "%rdi") == 0) return 7;
-    else if (strcmp(reg, "%r8") == 0) return 8;
-    else if (strcmp(reg, "%r9") == 0) return 9;
-    else if (strcmp(reg, "%r10") == 0) return 10;
-    else if (strcmp(reg, "%r11") == 0) return 11;
-    else if (strcmp(reg, "%r12") == 0) return 12;
-    else if (strcmp(reg, "%r13") == 0) return 13;
-    else if (strcmp(reg, "%r14") == 0) return 14;
+    if (strcmp(reg, "%eax") == 0) return 0;
+    else if (strcmp(reg, "%ecx") == 0) return 1;
+    else if (strcmp(reg, "%edx") == 0) return 2;
+    else if (strcmp(reg, "%ebx") == 0) return 3;
+    else if (strcmp(reg, "%esp") == 0) return 4;
+    else if (strcmp(reg, "%ebp") == 0) return 5;
+    else if (strcmp(reg, "%esi") == 0) return 6;
+    else if (strcmp(reg, "%edi") == 0) return 7;
+    else if (strcmp(reg, "%e8") == 0) return 8;
+    else if (strcmp(reg, "%e9") == 0) return 9;
+    else if (strcmp(reg, "%e10") == 0) return 10;
+    else if (strcmp(reg, "%e11") == 0) return 11;
+    else if (strcmp(reg, "%e12") == 0) return 12;
+    else if (strcmp(reg, "%e13") == 0) return 13;
+    else if (strcmp(reg, "%e14") == 0) return 14;
     else return 15;
 }
 
@@ -173,21 +174,21 @@ outputnode assemble(inputnode *list)
         else if (!strcmp(comm.name, "nop"))
             buff = "10";
         else if (!strcmp(comm.name, "rrmovl"))
-            sprintf(buff, "20%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "irmovl"))
-            sprintf(buff, "30F%d%s", reg_num(comm.rB), reg_num(comm.other));
+            sprintf(buff, "30f%x%s", reg_num(comm.rB), reg_num(comm.other));
         else if (!strcmp(comm.name, "rmmovl"))
-            sprintf(buff, "40%d%d%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
+            sprintf(buff, "40%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
         else if (!strcmp(comm.name, "mrmovl"))
-            sprintf(buff, "50%d%d%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
+            sprintf(buff, "50%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
         else if (!strcmp(comm.name, "addl"))
-            sprintf(buff, "60%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "60%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "subl"))
-            sprintf(buff, "61%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "61%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "andl"))
-            sprintf(buff, "62%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "62%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "xorl"))
-            sprintf(buff, "63%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "63%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "jmp"))
             sprintf(buff, "70%s", reg_num(comm.other));
         else if (!strcmp(comm.name, "jle"))
@@ -203,25 +204,25 @@ outputnode assemble(inputnode *list)
         else if (!strcmp(comm.name, "jg"))
             sprintf(buff, "76%s", reg_num(comm.other));
         else if (!strcmp(comm.name, "cmovle"))
-            sprintf(buff, "21%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovl"))
-            sprintf(buff, "22%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "22%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmove"))
-            sprintf(buff, "23%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "23%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovne"))
-            sprintf(buff, "24%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "24%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovge"))
-            sprintf(buff, "25%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "25%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovg"))
-            sprintf(buff, "26%d%d", reg_num(comm.rA), reg_num(comm.rB));
+            sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "call"))
             sprintf(buff, "80%s", comm.other);
         else if (!strcmp(comm.name, "ret"))
             sprintf(buff, "90");
         else if (!strcmp(comm.name, "pushl"))
-            sprintf(buff, "A0%dF", comm.rA);
+            sprintf(buff, "A0%xf", comm.rA);
         else if (!strcmp(comm.name, "popl"))
-            sprintf(buff, "B0%dF", comm.rA);
+            sprintf(buff, "B0%xf", comm.rA);
         else
             exit(1);
         curr->data = buff;
@@ -230,4 +231,5 @@ outputnode assemble(inputnode *list)
         curr = &next;
         list = list->next;
     }
+    return ret;
 }
