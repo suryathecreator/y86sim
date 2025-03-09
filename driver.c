@@ -11,10 +11,37 @@
 
 void initial();
 
+// Forward declaration needed in C
+typedef struct inputnode inputnode;
+typedef struct outputnode outputnode;
+
+typedef struct
+{
+    char *name, *rA, *rB, *other;
+} command;
+
+typedef struct inputnode
+{
+    inputnode *next;
+    command *data;
+} inputnode;
+
+typedef struct outputnode
+{
+    outputnode *next;
+    char *data;
+} outputnode;
+
+void file_to_linked_list(char *filename); // We can implement interface logic here if desired
+outputnode assemble(inputnode*);
+
 int main()
 {
+    file_to_linked_list((char*) "add3numbers.s");
     /* Working file-open code. Looked up how to do this. I am able to split the files
        line by line now. Will modify as needed as I work through fns. */
+/*
+    
     FILE *file = fopen("add3numbers.s", "r");
     if (file == NULL)
     {
@@ -35,6 +62,36 @@ int main()
                 //    printf ("hi!");
             }
             word = strtok(NULL, " \t");
+        }
+    }
+    fclose(file);
+*/
+}
+
+void file_to_linked_list(char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        printf("File open failed. Please try again.\n");
+        //return;
+    }
+    char line[4096];
+    while (fgets(line, sizeof(line), file))
+    {
+        line[strcspn(line, "\n")] = '\0';
+        printf("%s\n", line);
+        printf("\n");
+        char *word = strtok(line, "\t");
+        while (word != NULL)
+        {
+            printf("Word:%s\n", word);
+            if (strcmp(word, "%eax") == 0)
+            {
+                //    printf ("hi!");
+            }
+            word = strtok(NULL, "\t");
+//            printf("%s", word);
+            printf("\n");
         }
     }
     fclose(file);
@@ -84,22 +141,7 @@ int reg_num(char *reg)
 {
 }
 
-typedef struct
-{
-    char *name, *rA, *rB, *other;
-} command;
 
-typedef struct
-{
-    inputnode *next;
-    command *data;
-} inputnode;
-
-typedef struct
-{
-    outputnode *next;
-    char *data;
-} outputnode;
 
 outputnode assemble(inputnode *list)
 {
