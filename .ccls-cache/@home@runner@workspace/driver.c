@@ -1,74 +1,67 @@
+// All that's left/To-do 03/09: 
+/*
+1. quick assembler directives/symbolic names (see Line 87), 
+2. creation of a quick overall driver fn. to manage the overall program/memory counter (see Line 87 for logic, super quick), 
+3. conversion of practice prob file of y86/typing it up, testing/debugging -- probably should do this first
+so that the overall driver fn./assembly directives are done properly w.r.t. the way my input converts into a command linked list (see Line 87 for the explanation of the symbolic name -> memory address idea)
+
+*See file_parsing_example.pdf for how it's parsed -- the file_parsing gets it into those lines (ex. movl\t$0\t%eax (i'm putting \t so it's clear that it's a tab split)), then the command linked list function does a NULL, \t splicing to get each word (that's each word being printed). See the fns and this will make sense
+
+I can do 1/2/3^ in a bit but I'm putting it here in case you have time
+
+optional -- hashmap & gui if bored
+*/
+
 /*
  * @authors Surya Duraivenkatesh, Josh Tittiranonda
  * @date: 03/2025
- * Driver function for y86sim's Assembler.
- * ref: https://spcs.instructure.com/courses/8654/files/1593217?module_item_id=212606
+ * This is the OHS Y86-64 Emulator! In this program, assembly files are read and parsed into a queue of commands, which is ultimately put into a linked list of commands split by their struct elements. Finally, this queue is processed by the Y86-64 Emulator, which produces a linked list of machine code commands, which are ultimately printed to the user. Hope you enjoy!
+
+[References]
+Bryant, Randal E., and David R. O'Hallaron. Computer Systems: A Programmer's Perspective.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
+#include "Queue.c"
+#include "commandList.h"
 
-void initial();
-
-// Forward declaration needed in C
-typedef struct inputnode inputnode;
-typedef struct outputnode outputnode;
-
-typedef struct
-{
-    char *name, *rA, *rB, *other;
-} command;
-
-typedef struct inputnode
-{
-    inputnode *next;
-    command *data;
-} inputnode;
-
-typedef struct outputnode
-{
-    outputnode *next;
-    char *data;
-} outputnode;
-
-void file_to_linked_list(char *filename); // We can implement interface logic here if desired
+char* interface();
+void file_parsing(char*);
 outputnode assemble(inputnode*);
+void commandLinkedList(inputnode*, Queue*);
 
 int main()
 {
-    file_to_linked_list((char*) "add3numbers.s");
-    /* Working file-open code. Looked up how to do this. I am able to split the files
-       line by line now. Will modify as needed as I work through fns. */
-/*
+    char* filename = interface();
+    file_parsing(filename); // add3numbers.s for now, should be Y86 file I'll add it now
     
-    FILE *file = fopen("add3numbers.s", "r");
-    if (file == NULL)
-    {
-        printf("File open failed. Please try again.\n");
-        return 1;
-    }
-    char line[4096];
-    while (fgets(line, sizeof(line), file))
-    {
-        line[strcspn(line, "\n")] = '\0';
-        printf("%s\n", line);
-        char *word = strtok(line, " ");
-        while (word != NULL)
-        {
-            // printf("Word:%s\n", word);
-            if (strcmp(word, "%eax") == 0)
-            {
-                //    printf ("hi!");
-            }
-            word = strtok(NULL, " \t");
-        }
-    }
-    fclose(file);
-*/
 }
 
-void file_to_linked_list(char *filename) {
+/*
+ * Function for the user to input file name of the file they want to assemble.
+ * @return: char* filename: file name, <= 50 characters
+*/
+char* interface()
+{
+    char *str = malloc(50);
+    printf("%s\n", "Welcome to the OHS Y86-64 Emulator! This program will help convert your assembly instructions into machine code. Please enter the file you'd like to assemble: ");
+    scanf("%49s", str);  // I'll assume the file name won't exceed 50 characters.
+    return str;    
+}
+
+/*
+ * Function to parse the file into an array of lines.
+ * @param: char* filename: file name, <= 50 characters
+*/
+void file_parsing(char *filename) {
+    inputnode head;
+    inputnode *curr = &head;
+    Queue *lineQueue;
+    
+    // File-reading code
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -81,25 +74,39 @@ void file_to_linked_list(char *filename) {
         line[strcspn(line, "\n")] = '\0';
         printf("%s\n", line);
         printf("\n");
-        char *word = strtok(line, "\t");
-        while (word != NULL)
+        enqueue(lineQueue, line);
+        
+        char *lineword = strtok(line, "\t"); // Tokenization of the line into words
+        commandLinkedList(curr, lineQueue);
+        // Linked-list creation
+   /*     while (word != NULL)
         {
             printf("Word:%s\n", word);
-            if (strcmp(word, "%eax") == 0)
-            {
-                //    printf ("hi!");
-            }
-            word = strtok(NULL, "\t");
+            word = strtok(NULL, "\t"); // Traversing through the line, word-by-word
 //            printf("%s", word);
             printf("\n");
         }
-    }
+    }*/
     fclose(file);
 }
 
-void initial()
-{
-    printf("%s\n", "Welcome to a Y86-64 Assembler Simulator! For an inputted instruction, the resulting action on the machine will be shown (e.g. register changes, memory changes, condition code changes, etc.)");
+/*
+    * Functions to create a linked list of commands.
+    * @param: *head, pointer to the head of the desired input linked list (defined out of the function scope)
+    * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
+*/
+    // TO-DO (surya): Finishing up with assembler directives and similar
+void commandLinkedList(inputnode *head, Queue *lineQueue) {
+    inputnode *curr = head;
+    while (!emptyQueue(lineQueue)) {
+        char *word = strtok(dequeue(lineQueue), "\t");
+// regex code to detect whether its a a) symbolic name (regex with ":"), compiler directive (regex with "."), and if neither its gonna be an actual command.
+        // Would simply just -- for labels -- create hashmap for the labels' locations.
+            // for the compiler directives, usually modifies the line counter to align with a boundary.
+                // 3 of them, .pos x starts next lines @ x, .align x means align to x-byte boundary, .long/.quad means we put a 4/8-byte value at the current memory address where the inst. is
+        // so we need to also keep count of how many bytes the inst. is (tho we can just get the size) for the counter
+// Note, if there is a init: for example, we need to like push that to hashmap and keep moving -- but if it's a directive, we'd do a different route (we'd follow out the directive's effects). 
+    }   
 }
 
 // You will assume to receive in remainder: a hex rep of "%rA, %rB"
@@ -120,29 +127,21 @@ We can make sure it compiles later.
 For now, no need to find out which of the registers it is, just need
 to separate the first and second arg. We can map after with a quick helper
 */
-long addq(long remainder)
-{
-    // I would find a way to, from the hexadecimal representation of
-    // part after (space) in addq (space) %rA, %rB
-    // concatenate 6 + 0 + %rA + %rB
-    // through string slicing
 
-    // Then return that final thing. This slicing/number differs whether its subq, or mov, etc.
-
-    // Once we do this for each fn, we can do the rest.
-    // ****IMPORTANT****
-    // Explicitly make two variables to define %rA and %rB for later, when we need to do the simulator interface
-    // showing what was modified and when.
-}
 
 // assuming there is some linked-list structure of commands (to-implement)
 
+/*
+    Converts register to register's machine-code representation.
+    @param *reg register to convert
+    @return: char* register's binary representation
+*/
 int reg_num(char *reg)
 {
+    // TO DO -- i can do this quickly in a bit (surya)
 }
 
-
-
+    // need to double check this
 outputnode assemble(inputnode *list)
 {
     outputnode ret;
@@ -216,9 +215,3 @@ outputnode assemble(inputnode *list)
         list = list->next;
     }
 }
-
-// 12 things we needa do
-// I'll do OPq (add/sub/etc.), jxx, call, ret, push, pop (last 6 on slide 4)
-// (first 6 on slide 4, see ref link top of code file)
-// You can do halt, nop, cmov, irmovq, rmmov, mrmov
-//(halt and nop are indeed just one line each tho, but mov seems a bit longer so it should even it out for us)

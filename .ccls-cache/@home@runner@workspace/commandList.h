@@ -1,0 +1,31 @@
+/*
+ * @authors Surya Duraivenkatesh, Josh Tittiranonda
+ * @date: 03/2025
+ * Header file to define the nodes and command structs to help with creating the linked list of assembly and binary commands.
+ */
+
+#ifndef COMMANDLIST_H
+#define COMMANDLIST_H
+
+// Forward declaration needed in C
+typedef struct inputnode inputnode;
+typedef struct outputnode outputnode;
+
+typedef struct
+{
+    char *name, *rA, *rB, *other;
+} command;
+
+typedef struct inputnode
+{
+    inputnode *next;
+    command *data;
+} inputnode;
+
+typedef struct outputnode
+{
+    outputnode *next;
+    char *data;
+} outputnode;
+
+#endif
