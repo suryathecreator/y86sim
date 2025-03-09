@@ -20,14 +20,15 @@ int main()
         printf("File open failed. Please try again.\n");
         return 1;
     }
-    char line[2048];
+    char line[4096];
     while (fgets(line, sizeof(line), file)) {
         line[strcspn(line, "\n")] = '\0';
+        printf("%s\n", line);
         char *word = strtok(line, " "); 
         while (word != NULL) {
-            printf("Word:%s\n", word);
+            //printf("Word:%s\n", word);
             if (strcmp(word, "%eax") == 0) {
-                printf ("hi!");
+            //    printf ("hi!");
             }
             word = strtok(NULL, " \t");
         }
