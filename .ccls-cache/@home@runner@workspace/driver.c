@@ -31,6 +31,7 @@ Bryant, Randal E., and David R. O'Hallaron. Computer Systems: A Programmer's Per
 char* interface();
 void file_parsing(char*);
 outputnode assemble(inputnode*);
+int reg_num(char*);
 void commandLinkedList(inputnode*, Queue*);
 
 int main()
@@ -138,7 +139,22 @@ to separate the first and second arg. We can map after with a quick helper
 */
 int reg_num(char *reg)
 {
-    // TO DO -- i can do this quickly in a bit (surya)
+    if (strcmp(reg, "%rax") == 0) return 0;
+    else if (strcmp(reg, "%rcx") == 0) return 1;
+    else if (strcmp(reg, "%rdx") == 0) return 2;
+    else if (strcmp(reg, "%rbx") == 0) return 3;
+    else if (strcmp(reg, "%rsp") == 0) return 4;
+    else if (strcmp(reg, "%rbp") == 0) return 5;
+    else if (strcmp(reg, "%rsi") == 0) return 6;
+    else if (strcmp(reg, "%rdi") == 0) return 7;
+    else if (strcmp(reg, "%r8") == 0) return 8;
+    else if (strcmp(reg, "%r9") == 0) return 9;
+    else if (strcmp(reg, "%r10") == 0) return 10;
+    else if (strcmp(reg, "%r11") == 0) return 11;
+    else if (strcmp(reg, "%r12") == 0) return 12;
+    else if (strcmp(reg, "%r13") == 0) return 13;
+    else if (strcmp(reg, "%r14") == 0) return 14;
+    else return 15;
 }
 
     // need to double check this
