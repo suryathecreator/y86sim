@@ -40,7 +40,7 @@ bool add(map* m, element* data) {
         printf("Full queue. Try again.");
         return false;
     }
-    //    printf("Enqueueing %s, with tail %d\n", data, q->tail);
+       printf("Map add %s, with tail %d\n", data->name, m->tail);
     m->arr[m->tail] = malloc(sizeof(element));
     m->arr[m->tail]->name = malloc(strlen(data->name)*sizeof(char) + 1);
     strcpy(m->arr[m->tail]->name, data->name);
@@ -74,6 +74,9 @@ int findAddress(map *m, char *name) {
 
 void printMap(map *m) {
     int counter = m->head;
+        printf("Head: %d\n", m->head);
+        printf("First element: %s", m->arr[counter]->name);
+        printf("Tail: %d\n", m->tail);
     while (counter < m->tail) {
         printf("%s\t%i", m->arr[counter]->name, m->arr[counter]->address);
         counter++;
