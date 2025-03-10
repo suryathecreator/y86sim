@@ -9,7 +9,7 @@
 #define MAX_LINE_COUNT 1000
 
 typedef struct {
-     char* arr[MAX_LINE_COUNT];
+     char** arr;
      int tail;
      int head;
 } Queue;

@@ -33,8 +33,8 @@ int main()
     print = assemble(startingList, file_parsing(filename, startingList));
 
     while (print != NULL) {
-        printf("0#%x\t", print->memoryAddress);
-        printf("%s\n", print->data);
+    //    printf("0%x\t", print->memoryAddress);
+    //    printf("%s\n", print->data);
         print = print->next;
     }
 }    
@@ -58,8 +58,7 @@ char* interface()
 map* file_parsing(char *filename, inputnode *head) {
     map *map = malloc(sizeof(map));
     inputnode *curr = head;
-    Queue *lineQueue = malloc(sizeof(Queue));
-    queueCreation(lineQueue);
+    Queue *lineQueue = queueCreation(MAX_LINE_COUNT);
     
     // File-reading code
     FILE *file = fopen(filename, "r");
@@ -72,13 +71,13 @@ map* file_parsing(char *filename, inputnode *head) {
     while (fgets(line, sizeof(line), file))
     {
         line[strcspn(line, "\n")] = '\0';
-        printf("%s\n", line);
+    //    printf("%s", line); // Debugging
         enqueue(lineQueue, line);
     }
     fclose(file);
 
     printQueue(lineQueue);
-    printf("arrived before calling command list fn\n");
+//    printf("arrived before calling command list fn\n");
     return commandLinkedList(curr, lineQueue, map);
 }
 
@@ -95,12 +94,12 @@ map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
     curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
 
-    printf("arrived before calling empty queue while lp\n"); // Debugging purposes
+ //   printf("arrived before calling empty queue while lp\n"); // Debugging purposes
 
     while (!emptyQueue(lineQueue)) {
         char *word = strtok(dequeue(lineQueue), "\t"); // Tokenize line into words
-        printf("arrived before calling if statement for dir\n"); // Debugging purposes
-        printf("%s\n", word);
+  //      printf("arrived before calling if statement for dir\n"); // Debugging purposes
+  //      printf("%s\n", word);
         if (word[0] == '.') { // Assembler directive case
             newCommand->directive = true;
             if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
