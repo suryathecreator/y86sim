@@ -76,6 +76,8 @@ map* file_parsing(char *filename, inputnode *head) {
         enqueue(lineQueue, line);
     }
     fclose(file);
+
+    printQueue(lineQueue);
     printf("arrived before calling command list fn\n");
     return commandLinkedList(curr, lineQueue, map);
 }
