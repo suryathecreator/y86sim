@@ -56,20 +56,24 @@ void file_parsing(char *filename) {
     inputnode head;
     inputnode *curr = &head;
     Queue *lineQueue;
+    queueCreation(lineQueue);
     
     // File-reading code
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
         printf("File open failed. Please try again.\n");
-        //return;
+        return;
     }
     char line[4096];
     while (fgets(line, sizeof(line), file))
     {
+        printf("I am here!");
         line[strcspn(line, "\n")] = '\0';
+        printf("I am here!");
         printf("%s\n", line);
         printf("\n");
+        printf("I am here!");
         enqueue(lineQueue, line);
         
         char *lineword = strtok(line, "\t"); // Tokenization of the line into words
@@ -99,7 +103,8 @@ void driver(outputnode *list) {
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
 void commandLinkedList(inputnode *list, Queue *lineQueue) {
-    const inputnode* ret = list; //pointer to first element
+    inputnode* ret = list; //pointer to first element
+    // #pragma warning(suppress : [-Wdiscarded-qualifiers]):
     inputnode *curr = ret; //pointer to first element, will be changed
     command *newCommand; //pointer to new command object
     newCommand = malloc(sizeof(command));
