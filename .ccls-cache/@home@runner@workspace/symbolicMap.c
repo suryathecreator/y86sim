@@ -14,7 +14,7 @@ bool empty(map*);
 bool full(map*);
 bool add(map*, element*);
 bool del(map*);
-long findAddress(map*, char*);
+int findAddress(map*, char*);
 
 
 void mapCreation(map* q)
@@ -51,7 +51,7 @@ bool del(map* m) {
     return true;
 }
 
-long findAddress(map *m, char *name) {
+int findAddress(map *m, char *name) {
     while (m->head < m->tail) {
         if (!strcmp(m->arr[m->head]->name, name)) {
             return (m->arr[m->head]->address);
