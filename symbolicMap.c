@@ -16,12 +16,14 @@ bool add(map*, element*);
 bool del(map*);
 int findAddress(map*, char*);
 
-
+// Constructor
 void mapCreation(map* q)
 {
     q->head = 0;
     q->tail = 0;
 }
+
+// Map modification functions
 bool empty(map* m)
 {
     return (m->head == m->tail);
@@ -29,7 +31,6 @@ bool empty(map* m)
 bool full(map* m) {
     return (m->tail == MAX_QUEUE_SIZE);
 }
-
 bool add(map* q, element* data) {
     if (full(q)) {
         printf("Full queue. Please contact the developer to fix a logical error within the program.");
@@ -40,7 +41,6 @@ bool add(map* q, element* data) {
     q->tail++;
     return true;
 }
-
 bool del(map* m) {
     if (empty(m)) {
         printf("Empty queue. Please contact the developer to fix a logical error within the program.");
@@ -50,7 +50,6 @@ bool del(map* m) {
     m->head++;
     return true;
 }
-
 int findAddress(map *m, char *name) {
     while (m->head < m->tail) {
         if (!strcmp(m->arr[m->head]->name, name)) {

@@ -22,6 +22,4 @@ typedef struct {
      int head;
 } map;
 
-
-
 #endif

@@ -1,4 +1,4 @@
-// To-do: Debugging. There's a print queue fn to use, alongside a print map fn.
+// To-do: Debugging to get asum.s to run and produce asum.o. There's a print queue fn to use, alongside a print map fn to help.
 
 /*
  * @authors Surya Duraivenkatesh, Josh Tittiranonda
@@ -88,21 +88,20 @@ map* file_parsing(char *filename, inputnode *head) {
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
 map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
-    inputnode* ret = list; //pointer to first element
-    // #pragma warning(suppress : [-Wdiscarded-qualifiers]):
-    inputnode *curr = ret; //pointer to first element, will be changed
-    command *newCommand; //pointer to new command object
+    inputnode* ret = list; // Pointer to first element.
+    inputnode *curr = ret; // Pointer to first element, will be changed.
+    command *newCommand; // Pointer to new command object.
     newCommand = malloc(sizeof(command));
-    curr->data = newCommand; //modifies data of first element
+    curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
 
-    printf("arrived before calling empty queue while lp\n");
+    printf("arrived before calling empty queue while lp\n"); // Debugging purposes
 
     while (!emptyQueue(lineQueue)) {
         char *word = strtok(dequeue(lineQueue), "\t"); // Tokenize line into words
-        printf("arrived before calling if statement for dir\n");
+        printf("arrived before calling if statement for dir\n"); // Debugging purposes
         printf("%s\n", word);
-        if (word[0] == '.') {
+        if (word[0] == '.') { // Assembler directive case
             newCommand->directive = true;
             if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
                 newCommand->long_or_quad = true;
@@ -121,13 +120,13 @@ map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
                 continue; // The directive is then not important (e.g. .file or .globl). Note, there exists cases like ".LFB22:", so we can't allow it to hit the next elif.
             }
         }
-        else if (word[sizeof(*word)/sizeof(word[0])-1] == ':') { // Symbolic name
+        else if (word[sizeof(*word)/sizeof(word[0])-1] == ':') { // Symbolic name case
             strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
             newCommand->name = word;
             newCommand->symbol = true;
             add(map, newCommand->symbolicName); // Adding to hashmap
         }
-        else {
+        else { // Non-directive command case
             newCommand->directive = false; // Note this is unnecessary, just for clarity.
             // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it each time you need a next word
             if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
@@ -224,15 +223,16 @@ int reg_num(char *reg)
     else if (strcmp(reg, "%e12") == 0) return 12;
     else if (strcmp(reg, "%e13") == 0) return 13;
     else if (strcmp(reg, "%e14") == 0) return 14;
-    else if (reg[0] == '$') { // Constants
+    else if (reg[0] == '$') { // Constants/Immediate values
         return (int)strtol(reg + 1, NULL, 10);
     }
-    else return 15; // No register
+    else return 15; // No register case
 }
 
-
-
-    // need to double check this
+/*
+    Converts the linked list of assembly commands into a linked list of binary commands.
+    @param: *list, input linked list
+*/
 outputnode* assemble(inputnode *list, map *names)
 {
     long memoryAddress; // Added as field for outputnode
