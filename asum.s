@@ -1,3 +1,4 @@
+.pos 0
 init: irmovl Stack, %esp
       irmovl Stack, %ebp
       call Main               # Execute main program

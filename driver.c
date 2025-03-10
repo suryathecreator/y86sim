@@ -19,22 +19,32 @@ Bryant, Randal E., and David R. O'Hallaron. Computer Systems: A Programmer's Per
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#include "Queue.h"
 #include "Queue.c"
 #include "commandList.h"
 #include "symbolicMap.h"
+#include "symbolicMap.c"
 
 char* interface();
-void file_parsing(char*);
+void file_parsing(char*, inputnode*);
 int reg_num(char*);
-void commandLinkedList(inputnode*, Queue*);
-outputnode* assemble(inputnode*);
+map* commandLinkedList(inputnode*, Queue*);
+outputnode* assemble(inputnode*, map*);
 
 int main()
-{
+{   
+    inputnode *startingList; // To print in deassembler-style
+    outputnode *print;
     char* filename = interface();
-    file_parsing(filename); // add3numbers.s for now, should be Y86 file I'll add it now
-    
-}
+    file_parsing(filename, startingList); // add3numbers.s for now, should be Y86 file I'll add it now
+    print = assemble(startingList);
+
+    while (print != NULL) {
+        printf("0#%x\t", print->memoryAddress);
+        printf("%s\n", print->data);
+        print = print->next;
+    }
+}    
 
 /*
  * Function for the user to input file name of the file they want to assemble.
@@ -45,16 +55,15 @@ char* interface()
     char *str = malloc(50);
     printf("%s\n", "Welcome to the OHS Y86-64 Emulator! This program will help convert your assembly instructions into machine code. Please enter the file you'd like to assemble: ");
     scanf("%49s", str);  // I'll assume the file name won't exceed 50 characters.
-    return str;    
+    return str;
 }
 
 /*
  * Function to parse the file into an array of lines.
  * @param: char* filename: file name, <= 50 characters
 */
-void file_parsing(char *filename) {
-    inputnode head;
-    inputnode *curr = &head;
+void file_parsing(char *filename, inputnode *head) {
+    inputnode *curr = head;
     Queue *lineQueue;
     queueCreation(lineQueue);
     
@@ -82,27 +91,13 @@ void file_parsing(char *filename) {
 fclose(file);
 }
 
-// Josh to-do
-void driver(outputnode *list) {
-    long memoryAddressCounter = 0;
-    while (list != NULL) {
-        
-        // get the next command from the output list
-        // if it's a directive, then add to memory address counter by the following rules:
-        // .align: align to current memory address to *command->alignment (x) byte value
-        // bool *long_or_quad is true: add 8 bytes to memory address counter
-        // .pos -> simply just change memory address to given pos
-        // LOOK AT asum.o -- we DONT need to deal with filename directive
-        // Symbolic names -- just keep mem address same, but if it's a call, then you know you need to go (need to implement, see line 132)
-    }
-}
-
 /*
     * Functions to create a linked list of commands.
     * @param: *head, pointer to the head of the desired input linked list (defined out of the function scope)
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
-void commandLinkedList(inputnode *list, Queue *lineQueue) {
+map* commandLinkedList(inputnode *list, Queue *lineQueue) {
+    map *map = malloc(sizeof(map));
     inputnode* ret = list; //pointer to first element
     // #pragma warning(suppress : [-Wdiscarded-qualifiers]):
     inputnode *curr = ret; //pointer to first element, will be changed
@@ -118,8 +113,7 @@ void commandLinkedList(inputnode *list, Queue *lineQueue) {
             strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
             newCommand->name = word;
             newCommand->symbol = true;
-            // (TODO @ josh) Assumed that, when we do the driver program, address is then assigned to this element. Hence, we can then compare the name of the symbol we encounter in the future to then get a respective address.
-            // @Josh implement this pls bc rn we'd need to iterate through maybe a list of symbolic names to get the address of the symbol we encounter, which isn't efficient though if you can easily hashmap that'd be good.
+            add(map, newCommand->symbolicName); // Adding to hashmap
         }
         if (word[0] == '.') {
             newCommand->directive = true;
@@ -195,8 +189,9 @@ int reg_num(char *reg)
 
 
     // need to double check this
-outputnode* assemble(inputnode *list)
+outputnode* assemble(inputnode *list, map *map)
 {
+    long memoryAddress; // Added as field for outputnode
     outputnode* ret;
     ret = malloc(sizeof(outputnode));
     outputnode* curr = ret;
@@ -204,8 +199,25 @@ outputnode* assemble(inputnode *list)
     curr->next=NULL;
     while (list != NULL)
     {
-        // add error handling?
-            // no -surya jk we'll do it later
+        if ((list->data)->directive == true) {
+            if ((list->data)->long_or_quad == true) {
+                memoryAddress += 8;
+                // print long/quad value, need to save it when making input list
+            }
+            else if ((list->data)->pos == true) {
+                memoryAddress = (list->data)->position;
+                // would move on afterward
+            }
+            else if ((list->data)->align == true) {
+                memoryAddress = memoryAddress + (memoryAddress % (list->data)->alignment);
+                // would move on afterward
+            }
+            else if ((list->data)->symbol == true) {
+                (list->data)->symbolicName->address = memoryAddress;
+            }
+        } 
+        // If not directive, then it's a command, and we can just calculate its 
+        curr->memoryAddress = memoryAddress + sizeof(curr->data); // Case for if not directive, and it'd assumably set to a value after all directives complete at beginning of prorgram (for our case, .pos 0 -> mem starts @ 0)
         char *buff;
         command comm = *(list->data);
         if (!strcmp(comm.name, "halt"))
@@ -254,17 +266,18 @@ outputnode* assemble(inputnode *list)
             sprintf(buff, "25%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovg"))
             sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
-        else if (!strcmp(comm.name, "call"))
-            sprintf(buff, "80%s", comm.other);
+        else if (!strcmp(comm.name, "call")) // Hashtable for symbolic names helps here
+            sprintf(buff, "80%s", findAddress(names, comm.other));
+            
         else if (!strcmp(comm.name, "ret"))
             sprintf(buff, "90");
         else if (!strcmp(comm.name, "pushl"))
             sprintf(buff, "A0%xf", comm.rA);
         else if (!strcmp(comm.name, "popl"))
             sprintf(buff, "B0%xf", comm.rA);
-        else
-            exit(1);
         curr->data = buff;
+        memoryAddress = memoryAddress + sizeof(buff); // For case of not directive, this is how the memory address updates
+        
         outputnode *next;
         next = malloc(sizeof(outputnode));
         curr->next = next;
