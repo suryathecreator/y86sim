@@ -1,15 +1,9 @@
-// All that's left/To-do 03/09: 
+// hi josh here's what's left: 
 /*
-1. quick assembler directives/symbolic names (see Line 87), 
-2. creation of a quick overall driver fn. to manage the overall program/memory counter (see Line 87 for logic, super quick), 
-3. conversion of practice prob file of y86/typing it up, testing/debugging -- probably should do this first
-so that the overall driver fn./assembly directives are done properly w.r.t. the way my input converts into a command linked list (see Line 87 for the explanation of the symbolic name -> memory address idea)
+1. Driver fn that implements memory address accounting, see line 93/94 "todo @josh" for context
+2. Test the file
 
-*See file_parsing_example.pdf for how it's parsed -- the file_parsing gets it into those lines (ex. movl\t$0\t%eax (i'm putting \t so it's clear that it's a tab split)), then the command linked list function does a NULL, \t splicing to get each word (that's each word being printed). See the fns and this will make sense
-
-I can do 1/2/3^ in a bit but I'm putting it here in case you have time
-
-optional -- hashmap & gui if bored
+optional --  gui if bored, hashmap for the names -> binary if bored
 */
 
 /*
@@ -27,6 +21,7 @@ Bryant, Randal E., and David R. O'Hallaron. Computer Systems: A Programmer's Per
 #include <regex.h>
 #include "Queue.c"
 #include "commandList.h"
+#include "symbolicMap.h"
 
 char* interface();
 void file_parsing(char*);
@@ -79,17 +74,21 @@ void file_parsing(char *filename) {
         
         char *lineword = strtok(line, "\t"); // Tokenization of the line into words
         commandLinkedList(curr, lineQueue);
-        // Linked-list creation
-   /*     while (word != NULL)
-        {
-            printf("Word:%s\n", word);
-            word = strtok(NULL, "\t"); // Traversing through the line, word-by-word
-//            printf("%s", word);
-            printf("\n");
-        }
-    }*/
     }
 fclose(file);
+}
+
+// Josh to-do
+void driver() {
+    long memoryAddressCounter = 0;
+    while (/*output list noy null*/) {
+        // get the next command from the output list
+        // if it's a directive, then add to memory address counter by the following rules:
+        // .align: align to current memory address to *command->alignment (x) byte value
+        // bool *long_or_quad is true: add 8 bytes to memory address counter
+        // .pos -> simply just change memory address to given pos
+        // LOOK AT asum.o -- we DONT need to deal with filename directive
+        // Symbolic names -- just keep mem address same, but if it's a call, then you know you need to go (need to implement, see line 132)
 }
 
 /*
@@ -97,40 +96,62 @@ fclose(file);
     * @param: *head, pointer to the head of the desired input linked list (defined out of the function scope)
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
-    // TO-DO (surya): Finishing up with assembler directives and similar
-void commandLinkedList(inputnode *head, Queue *lineQueue) {
-    inputnode *curr = head;
+void commandLinkedList(inputnode *list, Queue *lineQueue) {
+    inputnode ret = *list;
+    inputnode *curr = &ret;
+    command *newCommand;
+    curr->data = newCommand;
+    curr->next = NULL;
+    // ^ @ josh this logic might be off sorry pointers trip me up check it pls
     while (!emptyQueue(lineQueue)) {
         char *word = strtok(dequeue(lineQueue), "\t");
-// regex code to detect whether its a a) symbolic name (regex with ":"), compiler directive (regex with "."), and if neither its gonna be an actual command.
-        // Would simply just -- for labels -- create hashmap for the labels' locations.
-            // for the compiler directives, usually modifies the line counter to align with a boundary.
-                // 3 of them, .pos x starts next lines @ x, .align x means align to x-byte boundary, .long/.quad means we put a 4/8-byte value at the current memory address where the inst. is
-        // so we need to also keep count of how many bytes the inst. is (tho we can just get the size) for the counter
-// Note, if there is a init: for example, we need to like push that to hashmap and keep moving -- but if it's a directive, we'd do a different route (we'd follow out the directive's effects). 
+        if (word[sizeof(*word)/sizeof(word[0])-1] == ':') { // Symbolic name
+            strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
+            *newCommand->name = word;
+            *newCommand->symbol = true;
+            // (TODO @ josh) Assumed that, when we do the driver program, address is then assigned to this element. Hence, we can then compare the name of the symbol we encounter in the future to then get a respective address.
+            // @Josh implement this pls bc rn we'd need to iterate through maybe a list of symbolic names to get the address of the symbol we encounter, which isn't efficient though if you can easily hashmap that'd be good.
+        }
+        if (word[0] == '.') {
+            *newCommand->directive = true;
+            if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
+                *newCommand->long_or_quad = true;
+            }
+            else if (!strcmp(word, ".pos")) {
+                *newCommand->name = word;
+                *newCommand->pos = true;
+                *newCommand->position = word[5]; // has 'x'
+                // We'd simply shift memory address in driver program to x/position BTW.
+            }
+            else if (!strcmp(word, ".align")) {
+                *newCommand->name = word;
+                *newCommand->align = true;
+                *newCommand->alignment = word[5]; // has 'x'
+                // We'd simply do modulo to align to the given alignment for the memory address.
+            }
+            else if (/* Implement call when you take care of fns*/) {
+                // todo
+            }
+            else {
+                *newCommand->directive = false; // Note this is unnecessary, just for clarity.
+                // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it each time you need a next word
+
+                /*
+               Clarified: the next would be like "rA," WITH THE COMMA BTW, and we'd extra rA usng strcpy, then rB/similar, we'd probably need to extract differently depending on the iniital word/instruction since it'd have different parameters to extract. But that's it. 
+               
+               Then, we have the list, and we have our outputnode list, and we can simply implement driver fn I put skeleton code for above to create the memory address counting (and we have everything we need for that now -- directives have the necessary shifts, and for commands just look at the size of the binary command to know how much to increase the mem address by)
+
+               You'd simply need a way to flip around the output node list, or simply save the head somewhere (I might not have fully understood that BTW) and then you can traverse it one by one and print. Done
+
+                */
+            }
+        }
+
+    
+
+    
     }   
 }
-
-// You will assume to receive in remainder: a hex rep of "%rA, %rB"
-
-/*
-ASCII character #32. Char SP - Space
-Integer ASCII code:	32
-Binary code:	0010 0000
-Octal code:	40
-Hexadecimal code:	20
-Group:	punctuation
-Reference: https://www.asciihex.com/character/punctuation/32/0x20/sp-space
-
-If it helps.
-
-We can make sure it compiles later.
-
-For now, no need to find out which of the registers it is, just need
-to separate the first and second arg. We can map after with a quick helper
-*/
-
-
 // assuming there is some linked-list structure of commands (to-implement)
 
 /*
@@ -166,9 +187,9 @@ outputnode assemble(inputnode *list)
     while (list != NULL)
     {
         // add error handling?
+            // no -surya jk we'll do it later
         char *buff;
         command comm = *(list->data);
-        // figure out better way to do ts later, temp solution but hash table probs best. or trie + switchcase
         if (!strcmp(comm.name, "halt"))
             buff = "00";
         else if (!strcmp(comm.name, "nop"))
@@ -176,7 +197,7 @@ outputnode assemble(inputnode *list)
         else if (!strcmp(comm.name, "rrmovl"))
             sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "irmovl"))
-            sprintf(buff, "30f%x%s", reg_num(comm.rB), reg_num(comm.other));
+            sprintf(buff, "30f%x%x", reg_num(comm.rB), reg_num(comm.other));
         else if (!strcmp(comm.name, "rmmovl"))
             sprintf(buff, "40%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
         else if (!strcmp(comm.name, "mrmovl"))
@@ -190,19 +211,19 @@ outputnode assemble(inputnode *list)
         else if (!strcmp(comm.name, "xorl"))
             sprintf(buff, "63%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "jmp"))
-            sprintf(buff, "70%s", reg_num(comm.other));
+            sprintf(buff, "70%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "jle"))
-            sprintf(buff, "71%s", reg_num(comm.other));
+            sprintf(buff, "71%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "jl"))
-            sprintf(buff, "72%s", reg_num(comm.other));
+            sprintf(buff, "72%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "je"))
-            sprintf(buff, "73%s", reg_num(comm.other));
+            sprintf(buff, "73%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "jne"))
-            sprintf(buff, "74%s", reg_num(comm.other));
+            sprintf(buff, "74%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "jge"))
-            sprintf(buff, "75%s", reg_num(comm.other));
+            sprintf(buff, "75%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "jg"))
-            sprintf(buff, "76%s", reg_num(comm.other));
+            sprintf(buff, "76%x", reg_num(comm.other));
         else if (!strcmp(comm.name, "cmovle"))
             sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
         else if (!strcmp(comm.name, "cmovl"))
