@@ -1,5 +1,5 @@
-init: irmovl Stack, %esp     # Set up stack pointer
-      irmovl Stack, %ebp     # Set up base pointer
+init: irmovl Stack, %esp
+      irmovl Stack, %ebp
       call Main               # Execute main program
       halt                    # Terminate program
 array: .long 0xd
