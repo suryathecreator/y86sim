@@ -12,7 +12,7 @@ typedef struct element element;
 
 typedef struct element {
      char *name;
-     long address;
+     int address;
      element *next;
 } element;
 

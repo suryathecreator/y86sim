@@ -1,4 +1,4 @@
-// To-do: Debugging
+// To-do: Debugging. There's a print queue fn to use, alongside a print map fn.
 
 /*
  * @authors Surya Duraivenkatesh, Josh Tittiranonda
@@ -76,6 +76,7 @@ map* file_parsing(char *filename, inputnode *head) {
         enqueue(lineQueue, line);
     }
     fclose(file);
+    printf("arrived before calling command list fn\n");
     return commandLinkedList(curr, lineQueue, map);
 }
 
@@ -92,8 +93,13 @@ map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
     newCommand = malloc(sizeof(command));
     curr->data = newCommand; //modifies data of first element
     curr->next = NULL;
+
+    printf("arrived before calling empty queue while lp\n");
+
     while (!emptyQueue(lineQueue)) {
         char *word = strtok(dequeue(lineQueue), "\t"); // Tokenize line into words
+        printf("arrived before calling if statement for dir\n");
+        printf("%s\n", word);
         if (word[0] == '.') {
             newCommand->directive = true;
             if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {

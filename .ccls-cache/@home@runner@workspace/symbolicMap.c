@@ -61,3 +61,11 @@ int findAddress(map *m, char *name) {
 }
 // Map-finding (hashmap better than this, but may take a while to implement, so this is future work)
     // Goal is not efficient, but rather to implement the emulator.
+
+void printmap(map *m) {
+    int counter = m->head;
+    while (counter < m->tail) {
+        printf("%s\t%i", m->arr[counter]->name, m->arr[counter]->address);
+        counter++;
+    }
+}
