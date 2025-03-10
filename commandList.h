@@ -30,6 +30,7 @@ typedef struct outputnode
 {
     outputnode *next;
     char *data;
+    int memoryAddress;
 } outputnode;
 
 #endif

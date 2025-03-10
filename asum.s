@@ -1,7 +1,8 @@
+.pos 0
 init: irmovl Stack, %esp
       irmovl Stack, %ebp
-      call Main               # Execute main program
-      halt                    # Terminate program
+      call Main
+      halt
 array: .long 0xd
        .long 0xc0
        .long 0xb00
@@ -9,27 +10,27 @@ array: .long 0xd
 Main:  pushl %ebp
        rrmovl %esp, %ebp
        irmovl $4, %eax
-       pushl %eax             # Push 4
+       pushl %eax
        irmovl array, %edx
-       pushl %edx             # Push array
-       call Sum               # Sum(array, 4)
+       pushl %edx
+       call Sum
        rrmovl %ebp, %esp
        popl %ebp
        ret
 Sum:   pushl %ebp
        rrmovl %esp, %ebp
-       mrmovl 8(%ebp), %ecx   # ecx = Start
-       mrmovl 12(%ebp), %edx  # edx = Count
-       xorl %eax, %eax        # sum = 0
-       andl %edx, %edx        # Set condition codes
+       mrmovl 8(%ebp), %ecx
+       mrmovl 12(%ebp), %edx
+       xorl %eax, %eax
+       andl %edx, %edx
        je End
-Loop:  mrmovl (%ecx), %esi    # get *Start
-       addl %esi, %eax        # add to sum
+Loop:  mrmovl (%ecx), %esi
+       addl %esi, %eax
        irmovl $4, %ebx
-       addl %ebx, %ecx        # Start++
+       addl %ebx, %ecx
        irmovl $-1, %ebx
-       addl %ebx, %edx        # Count--
-       jne Loop               # Stop when 0
+       addl %ebx, %edx
+       jne Loop
 End:   rrmovl %ebp, %esp
        popl %ebp
        ret

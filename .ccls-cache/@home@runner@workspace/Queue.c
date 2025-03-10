@@ -43,3 +43,11 @@ char* dequeue(Queue* q) {
     q->head++;
     return q->arr[q->head-1];
 }
+
+void printQueue(Queue *q) {
+    int counter = q->head;
+    while (counter < q->tail) {
+        printf("%s\n", q->arr[counter]);
+        counter++;
+    }
+}
