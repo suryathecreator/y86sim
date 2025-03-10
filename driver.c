@@ -27,7 +27,7 @@ char* interface();
 void file_parsing(char*);
 int reg_num(char*);
 void commandLinkedList(inputnode*, Queue*);
-outputnode assemble(inputnode*);
+outputnode* assemble(inputnode*);
 
 int main()
 {
@@ -79,9 +79,10 @@ fclose(file);
 }
 
 // Josh to-do
-void driver() {
+void driver(outputnode *list) {
     long memoryAddressCounter = 0;
-    while (/*output list noy null*/) {
+    while (list != NULL) {
+        
         // get the next command from the output list
         // if it's a directive, then add to memory address counter by the following rules:
         // .align: align to current memory address to *command->alignment (x) byte value
@@ -89,6 +90,7 @@ void driver() {
         // .pos -> simply just change memory address to given pos
         // LOOK AT asum.o -- we DONT need to deal with filename directive
         // Symbolic names -- just keep mem address same, but if it's a call, then you know you need to go (need to implement, see line 132)
+    }
 }
 
 /*
@@ -97,43 +99,45 @@ void driver() {
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
 void commandLinkedList(inputnode *list, Queue *lineQueue) {
-    inputnode ret = *list;
-    inputnode *curr = &ret;
-    command *newCommand;
-    curr->data = newCommand;
+    const inputnode* ret = list; //pointer to first element
+    inputnode *curr = ret; //pointer to first element, will be changed
+    command *newCommand; //pointer to new command object
+    newCommand = malloc(sizeof(command));
+    curr->data = newCommand; //modifies data of first element
     curr->next = NULL;
     // ^ @ josh this logic might be off sorry pointers trip me up check it pls
+    // ^ changed it a little
     while (!emptyQueue(lineQueue)) {
         char *word = strtok(dequeue(lineQueue), "\t");
         if (word[sizeof(*word)/sizeof(word[0])-1] == ':') { // Symbolic name
             strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
-            *newCommand->name = word;
-            *newCommand->symbol = true;
+            newCommand->name = word;
+            newCommand->symbol = true;
             // (TODO @ josh) Assumed that, when we do the driver program, address is then assigned to this element. Hence, we can then compare the name of the symbol we encounter in the future to then get a respective address.
             // @Josh implement this pls bc rn we'd need to iterate through maybe a list of symbolic names to get the address of the symbol we encounter, which isn't efficient though if you can easily hashmap that'd be good.
         }
         if (word[0] == '.') {
-            *newCommand->directive = true;
+            newCommand->directive = true;
             if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
-                *newCommand->long_or_quad = true;
+                newCommand->long_or_quad = true;
             }
             else if (!strcmp(word, ".pos")) {
-                *newCommand->name = word;
-                *newCommand->pos = true;
-                *newCommand->position = word[5]; // has 'x'
+                newCommand->name = word;
+                newCommand->pos = true;
+                newCommand->position = word[5]; // has 'x'
                 // We'd simply shift memory address in driver program to x/position BTW.
             }
             else if (!strcmp(word, ".align")) {
-                *newCommand->name = word;
-                *newCommand->align = true;
-                *newCommand->alignment = word[5]; // has 'x'
+                newCommand->name = word;
+                newCommand->align = true;
+                newCommand->alignment = word[5]; // has 'x'
                 // We'd simply do modulo to align to the given alignment for the memory address.
             }
-            else if (/* Implement call when you take care of fns*/) {
+            else if (/* Implement call when you take care of fns*/false) {
                 // todo
             }
             else {
-                *newCommand->directive = false; // Note this is unnecessary, just for clarity.
+                newCommand->directive = false; // Note this is unnecessary, just for clarity.
                 // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it each time you need a next word
 
                 /*
@@ -146,10 +150,14 @@ void commandLinkedList(inputnode *list, Queue *lineQueue) {
                 */
             }
         }
-
-    
-
-    
+        // move to next element
+        inputnode *next;
+        next = malloc(sizeof(inputnode));
+        curr->next = next;
+        curr = curr->next;
+        newCommand = malloc(sizeof(command));
+        curr->data = newCommand;
+        curr->next = NULL;
     }   
 }
 // assuming there is some linked-list structure of commands (to-implement)
@@ -179,11 +187,16 @@ int reg_num(char *reg)
     else return 15;
 }
 
+
+
     // need to double check this
-outputnode assemble(inputnode *list)
+outputnode* assemble(inputnode *list)
 {
-    outputnode ret;
-    outputnode* curr = &ret;
+    outputnode* ret;
+    ret = malloc(sizeof(outputnode));
+    outputnode* curr = ret;
+    curr->data= NULL;
+    curr->next=NULL;
     while (list != NULL)
     {
         // add error handling?
@@ -247,9 +260,12 @@ outputnode assemble(inputnode *list)
         else
             exit(1);
         curr->data = buff;
-        outputnode next;
-        curr->next = &next;
-        curr = &next;
+        outputnode *next;
+        next = malloc(sizeof(outputnode));
+        curr->next = next;
+        curr = curr->next;
+        curr->data = NULL;
+        curr->next=NULL;
         list = list->next;
     }
     return ret;
