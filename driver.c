@@ -30,7 +30,10 @@ int main()
     inputnode *startingList = malloc(sizeof(inputnode)); // To print in deassembler-style later
     outputnode *print;
     char* filename = interface();
-    print = assemble(startingList, file_parsing(filename, startingList));
+    map* symbolicNames = file_parsing(filename, startingList);
+    printf("%d\n", (int) sizeof(symbolicNames->arr));
+    printMap(symbolicNames);
+    print = assemble(startingList, symbolicNames);
 
     while (print != NULL) {
     //    printf("0%x\t", print->memoryAddress);
@@ -47,7 +50,7 @@ char* interface()
 {
     char *str = malloc(50);
     printf("%s\n", "Welcome to the OHS Y86-64 Emulator! This program will help convert your assembly instructions into machine code. Please enter the file you'd like to assemble: ");
-    scanf("%49s", str);  // I'll assume the file name won't exceed 50 characters.
+    int successfulScan = scanf("%49s", str);  // I'll assume the file name won't exceed 50 characters. Note, scanf returns a value indicating the number of successful elements scanned, so I am saving it to silence the warning easily.
     return str;
 }
 
@@ -56,7 +59,7 @@ char* interface()
  * @param: char* filename: file name, <= 50 characters
 */
 map* file_parsing(char *filename, inputnode *head) {
-    map *map = malloc(sizeof(map));
+    map* map = mapCreation(MAX_QUEUE_SIZE);
     inputnode *curr = head;
     Queue *lineQueue = queueCreation(MAX_LINE_COUNT);
     
@@ -76,7 +79,7 @@ map* file_parsing(char *filename, inputnode *head) {
     }
     fclose(file);
 
-    printQueue(lineQueue);
+    // printQueue(lineQueue);
 //    printf("arrived before calling command list fn\n");
     return commandLinkedList(curr, lineQueue, map);
 }
@@ -86,7 +89,7 @@ map* file_parsing(char *filename, inputnode *head) {
     * @param: *head, pointer to the head of the desired input linked list (defined out of the function scope)
     * @param: *lineQueue, pointer to the queue of lines that'll be processed into a linked list of assembly commands
 */
-map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
+map* commandLinkedList(inputnode *list, Queue *lineQueue, map* m) {
     inputnode* ret = list; // Pointer to first element.
     inputnode *curr = ret; // Pointer to first element, will be changed.
     command *newCommand; // Pointer to new command object.
@@ -123,7 +126,7 @@ map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
             strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
             newCommand->name = word;
             newCommand->symbol = true;
-            add(map, newCommand->symbolicName); // Adding to hashmap
+            add(m, newCommand->symbolicName); // Adding to hashmap
         }
         else { // Non-directive command case
             newCommand->directive = false; // Note this is unnecessary, just for clarity.
@@ -197,7 +200,7 @@ map* commandLinkedList(inputnode *list, Queue *lineQueue, map* map) {
         curr->data = newCommand;
         curr->next = NULL;
     }
-    return map;
+    return m;
 }
 
 /*

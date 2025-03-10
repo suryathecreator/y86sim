@@ -8,7 +8,7 @@
 #define SYMBOLICMAP_H
 #define MAX_QUEUE_SIZE 1000 // Arbitrary.
 
-typedef struct element element;
+typedef struct element element; // Forward declaration required by C
 
 typedef struct element {
      char *name;
@@ -17,7 +17,7 @@ typedef struct element {
 } element;
 
 typedef struct {
-     element* arr[MAX_QUEUE_SIZE];
+     element** arr;
      int tail;
      int head;
 } map;
