@@ -16,12 +16,12 @@ char* dequeue(Queue*);
 // Queue implementation
 void queueCreation(Queue* q)
 {
-    q->head = -1;
+    q->head = 0;
     q->tail = 0;
 }
 bool emptyQueue(Queue* q)
 {
-    return (q->head == q->tail - 1);
+    return (q->head == q->tail);
 }
 bool fullQueue(Queue* q) {
     return (q->tail == MAX_LINE_COUNT);
@@ -33,11 +33,13 @@ bool enqueue(Queue* q, char* data) {
     }
     q->arr[q->tail] = data;
     q->tail++;
+    return true;
 }
 char* dequeue(Queue* q) {
     if (emptyQueue(q)) {
         printf("Empty queue. Try again.");
         return NULL;
     }
-    return q->arr[q->head++];
+    q->head++;
+    return q->arr[q->head-1];
 }
