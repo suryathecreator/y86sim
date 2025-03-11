@@ -108,29 +108,18 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
   //   printf("arrived before calling empty queue while lp\n"); // Debugging
   //   purposes
-
-  bool symbolicName = false;
-  char* restOfSymbolicCommand;
-
-    while (!emptyQueue(lineQueue)) {
-      char *word = malloc(sizeof(char) * 100);
-      if (!symbolicName) {
-        strcpy(word, strtok(dequeue(lineQueue), " "));  // Tokenize line into words
-      }
-      else {
-        strcpy(word, restOfSymbolicCommand);
-      }
-      
-      symbolicName = false; // Resetting symbolicName to false for next iteration
+  while (!emptyQueue(lineQueue)) {
     command *newCommand; // Pointer to new command object.
+  
     newCommand = malloc(sizeof(command));
     newCommand->name = malloc(sizeof(char) * 100); // Arbitrary assumption
     newCommand->rA = malloc(sizeof(char) * 100);
     newCommand->rB = malloc(sizeof(char) * 100);
     newCommand->other = malloc(sizeof(char) * 100);
-
+    
     curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
+    char *word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
     //      printf("arrived before calling if statement for dir\n"); //
     //      Debugging purposes
 //    printf("||%s and %ld|| ", word, strlen(word));
@@ -169,6 +158,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       }
     } else if ((word != NULL) &&
                (word[strlen(word) - 1] == ':')) { // Symbolic name case
+//      printf("HI!");
       newCommand->symbolicName = malloc(sizeof(element));
       newCommand->symbolicName->name = malloc(strlen(word) + 1);
       strncpy((newCommand->symbolicName)->name, word, strlen(word) - 1);
@@ -183,9 +173,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       printf("Symbolic address: %d\n", (newCommand->symbolicName)->address);
 
       add(m, newCommand->symbolicName); // Adding to hashmap
-// Now, need to execute rest of line.
-      strcpy(restOfSymbolicCommand, word);
-      symbolicName = true;
+    
+      
     } else {                            // Non-directive command case
       newCommand->directive = false; // Note this is unnecessary, just for clarity.
       // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it
@@ -268,7 +257,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
@@ -324,7 +313,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       }
     }
     printf("Command: Name (%s), rA (%s), rB (%s), other (%s)\n", newCommand->name, newCommand->rA, newCommand->rB, newCommand->other);
-//    printf("If long, %ld is value" , newCommand->value);
+    printf("If long, %ld is value" , newCommand->value);
     
     inputnode *next;
     next = malloc(sizeof(inputnode));
