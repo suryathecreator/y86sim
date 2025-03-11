@@ -90,7 +90,8 @@ map *file_parsing(char *filename, inputnode *head) {
 
   // printQueue(lineQueue);
   //    printf("arrived before calling command list fn\n");
-  return commandLinkedList(curr, lineQueue, map);
+  commandLinkedList(curr, lineQueue, map);
+  return map;
 }
 
 /*
@@ -103,15 +104,14 @@ map *file_parsing(char *filename, inputnode *head) {
 map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
   inputnode *ret = list; // Pointer to first element.
   inputnode *curr = ret; // Pointer to first element, will be changed.
-  command *newCommand;   // Pointer to new command object.
-  newCommand = malloc(sizeof(command));
-  curr->data = newCommand; // Modifies data of first element
-  curr->next = NULL;
 
   //   printf("arrived before calling empty queue while lp\n"); // Debugging
   //   purposes
-
   while (!emptyQueue(lineQueue)) {
+    command *newCommand; // Pointer to new command object.
+    newCommand = malloc(sizeof(command));
+    curr->data = newCommand; // Modifies data of first element
+    curr->next = NULL;
     char *word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
     //      printf("arrived before calling if statement for dir\n"); //
     //      Debugging purposes
@@ -122,6 +122,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       newCommand->directive = true;
       if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
         newCommand->long_or_quad = true;
+        newCommand->name = word;
+        newCommand->value = atoi(strtok(NULL, " "));
       } else if (!strcmp(word, ".pos")) {
         char *location = strtok(NULL, " ");
         newCommand->name = word;
@@ -140,9 +142,10 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
                   // Note, there exists cases like ".LFB22:", so we can't allow
                   // it to hit the next elif.
       }
-    } else if ((word != NULL) && (word[strlen(word)] == ':')) { // Symbolic name case
+    } else if ((word != NULL) &&
+               (word[strlen(word) - 1] == ':')) { // Symbolic name case
       printf("HI!");
-      strncpy((newCommand->symbolicName)->name, word, sizeof(*word) - 1);
+      strncpy((newCommand->symbolicName)->name, word, strlen(word) - 1);
       newCommand->name = word;
       newCommand->symbol = true;
       printf("Symbolic name: %s\n", (newCommand->symbolicName)->name);
@@ -304,6 +307,9 @@ outputnode *assemble(inputnode *list, map *names) {
                          // of prorgram (for our case, .pos 0 -> mem starts @ 0)
     char *buff;
     command comm = *(list->data);
+    if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
+      sprintf(buff, "%d", comm.value);
+    }
     if (!strcmp(comm.name, "halt"))
       buff = "00";
     else if (!strcmp(comm.name, "nop"))
