@@ -128,18 +128,24 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       newCommand->directive = true;
       if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
         newCommand->long_or_quad = true;
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
+
         newCommand->value = atoi(strtok(NULL, " "));
       } else if (!strcmp(word, ".pos")) {
         char *location = strtok(NULL, " ");
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
+
         newCommand->pos = true;
         newCommand->position =
             atoi(location); // Shifts memory address in driver program to the
                             // given position.
       } else if (!strcmp(word, ".align")) {
         char *shift = strtok(NULL, " ");
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
+
         newCommand->align = true;
         newCommand->alignment = atoi(
             shift); // Aligns to a alignment-byte boundary in driver program.
@@ -154,8 +160,10 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       newCommand->symbolicName = malloc(sizeof(element));
       newCommand->symbolicName->name = malloc(strlen(word) + 1);
       strncpy((newCommand->symbolicName)->name, word, strlen(word) - 1);
-   
+      (newCommand->symbolicName)->name[strlen(word) - 1] = '\0';
+      
       strncpy(newCommand->name, word, strlen(word) - 1);
+      newCommand->name[strlen(word) - 1] = '\0';
 
       newCommand->symbol = true;
       
@@ -169,39 +177,53 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       // each time you need a next word
       if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
         strncpy(newCommand->name, word, strlen(word)); // All that's needed is to set the name of the command.
+        newCommand->name[strlen(word)] = '\0';
+
       } else if (word[0] == 'j') {
         strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
+
         char* token = strtok(NULL, " ");
         strncpy(newCommand->other, token, strlen(token)); // Gets next word
+        newCommand->other[strlen(token)] = '\0';
+
       } else if (!strcmp(word, "cmov") || !strcmp(word, "cmovle") ||
                  !strcmp(word, "cmovl") || !strcmp(word, "cmove") ||
                  !strcmp(word, "cmovne") || !strcmp(word, "cmovge") ||
                  !strcmp(word, "cmovg")) {
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
+        newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
-        
+        newCommand->rB[strlen(token2)] = '\0';
+
       } else if (!strcmp(word, "addl") || !strcmp(word, "subl") ||
                  !strcmp(word, "andl") ||
                  !strcmp(
                      word,
                      "xorl")) { // Same as above, but written out for clarity.
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
-        
+        newCommand->rA[strlen(token)] = '\0';
+
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
+        newCommand->rB[strlen(token2)] = '\0';
+
       } else if (!strcmp(word, "pushl") || !strcmp(word, "popl")) {
         
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
-        
+        newCommand->rA[strlen(token)] = '\0';
+
       } else if (!strcmp(word, "call")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->other = strtok(NULL, "\t");
@@ -213,7 +235,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
-        
+        newCommand->rA[strlen(token)] = '\0';
+
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         
@@ -222,7 +245,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
-        
+        newCommand->rA[strlen(token)] = '\0';
+
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
 
@@ -241,7 +265,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
-        
+        newCommand->rA[strlen(token)] = '\0';
+
         newCommand->other = strtok(NULL, " ()"); // Three separate delimeters
                           // (https://cplusplus.com/reference/cstring/strtok/)
         char *token2 = strtok(NULL, " ");
@@ -415,13 +440,17 @@ outputnode *assemble(inputnode *list, map *names) {
               
     // the memory address updates
     curr->memoryAddress = memoryAddress;
-    outputnode *next;
-    next = malloc(sizeof(outputnode));
-    curr->next = next;
-    curr = curr->next;
-    curr->data = NULL;
-    curr->next = NULL;
+
+    if (list->next != NULL) {
+      outputnode *next;
+      next = malloc(sizeof(outputnode));
+      curr->next = next;
+      curr = curr->next;
+      curr->data = NULL;
+      curr->next = NULL;
+    }
     list = list->next;
+
   }
   return ret;
 }
