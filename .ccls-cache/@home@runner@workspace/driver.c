@@ -109,31 +109,37 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
   //   purposes
   while (!emptyQueue(lineQueue)) {
     command *newCommand; // Pointer to new command object.
+  
     newCommand = malloc(sizeof(command));
+    newCommand->name = malloc(sizeof(char) * 100); // Arbitrary assumption
+    newCommand->rA = malloc(sizeof(char) * 100);
+    newCommand->rB = malloc(sizeof(char) * 100);
+    newCommand->other = malloc(sizeof(char) * 100);
+    
     curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
     char *word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
     //      printf("arrived before calling if statement for dir\n"); //
     //      Debugging purposes
-    printf("||%s and %ld|| ", word, strlen(word));
-    printf("last letter %c\n", word[strlen(word) - 1]); // Debugging purposes")
+//    printf("||%s and %ld|| ", word, strlen(word));
+//    printf("last letter %c\n", word[strlen(word) - 1]); // Debugging purposes")
 
     if (word[0] == '.') { // Assembler directive case
       newCommand->directive = true;
       if (!strcmp(word, ".long") || !strcmp(word, ".quad")) {
         newCommand->long_or_quad = true;
-        newCommand->name = word;
+        strncpy(newCommand->name, word, strlen(word) - 1);
         newCommand->value = atoi(strtok(NULL, " "));
       } else if (!strcmp(word, ".pos")) {
         char *location = strtok(NULL, " ");
-        newCommand->name = word;
+        strncpy(newCommand->name, word, strlen(word) - 1);
         newCommand->pos = true;
         newCommand->position =
             atoi(location); // Shifts memory address in driver program to the
                             // given position.
       } else if (!strcmp(word, ".align")) {
         char *shift = strtok(NULL, " ");
-        newCommand->name = word;
+        strncpy(newCommand->name, word, strlen(word) - 1);
         newCommand->align = true;
         newCommand->alignment = atoi(
             shift); // Aligns to a alignment-byte boundary in driver program.
@@ -144,78 +150,113 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       }
     } else if ((word != NULL) &&
                (word[strlen(word) - 1] == ':')) { // Symbolic name case
-      printf("HI!");
+//      printf("HI!");
+      newCommand->symbolicName = malloc(sizeof(element));
+      newCommand->symbolicName->name = malloc(strlen(word) + 1);
       strncpy((newCommand->symbolicName)->name, word, strlen(word) - 1);
-      newCommand->name = word;
+   
+      strncpy(newCommand->name, word, strlen(word) - 1);
+
       newCommand->symbol = true;
+      
       printf("Symbolic name: %s\n", (newCommand->symbolicName)->name);
       printf("Symbolic address: %d\n", (newCommand->symbolicName)->address);
 
       add(m, newCommand->symbolicName); // Adding to hashmap
     } else {                            // Non-directive command case
-      newCommand->directive =
-          false; // Note this is unnecessary, just for clarity.
+      newCommand->directive = false; // Note this is unnecessary, just for clarity.
       // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it
       // each time you need a next word
       if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
-        newCommand->name =
-            word; // All that's needed is to set the name of the command.
+        strncpy(newCommand->name, word, strlen(word) - 1); // All that's needed is to set the name of the command.
       } else if (word[0] == 'j') {
-        newCommand->name = word;
-        newCommand->other = strtok(NULL, " "); // Gets the next word
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        char* token = strtok(NULL, " ");
+        strncpy(newCommand->other, token, strlen(token)); // Gets next word
       } else if (!strcmp(word, "cmov") || !strcmp(word, "cmovle") ||
                  !strcmp(word, "cmovl") || !strcmp(word, "cmove") ||
                  !strcmp(word, "cmovne") || !strcmp(word, "cmovge") ||
                  !strcmp(word, "cmovg")) {
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
-        strncpy(newCommand->rA, word, sizeof(*word) - 1);
-        newCommand->rB = strtok(NULL, " ");
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
+        
       } else if (!strcmp(word, "addl") || !strcmp(word, "subl") ||
                  !strcmp(word, "andl") ||
                  !strcmp(
                      word,
                      "xorl")) { // Same as above, but written out for clarity.
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
-        strncpy(newCommand->rA, word, sizeof(*word) - 1);
-        newCommand->rB = strtok(NULL, " ");
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
       } else if (!strcmp(word, "pushl") || !strcmp(word, "popl")) {
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        
       } else if (!strcmp(word, "call")) {
-        newCommand->name = word;
+        strncpy(newCommand->name, word, strlen(word) - 1);
         newCommand->other = strtok(NULL, "\t");
       } else if (!strcmp(word, "ret")) {
-        newCommand->name = word;
+      strncpy(newCommand->name, word, strlen(word) - 1);
       } else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
-        strncpy(newCommand->rA, word, sizeof(*word) - 1);
-        newCommand->rB = strtok(NULL, " ");
+        
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
+        
       } else if (!strcmp(word, "rrmovl")) {
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
-        strncpy(newCommand->rA, word, sizeof(*word) - 1);
-        newCommand->rB = strtok(NULL, " ");
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
+
       } else if (!strcmp(word, "irmovl")) {
-        newCommand->name = word;
-        newCommand->other = strtok(NULL, " ");
-        strncpy(newCommand->other, word, sizeof(*word) - 1);
-        newCommand->rB = strtok(NULL, " ");
+        
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->other, token, strlen(token) - 1);
+        
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
+        
       } else if (!strcmp(word, "rmmovl")) {
-        newCommand->name = word;
-        newCommand->rA = strtok(NULL, " ");
-        strncpy(newCommand->rA, word, sizeof(*word) - 1);
-        newCommand->other = strtok(
-            NULL, " ()"); // Three separate delimeters
+        strncpy(newCommand->name, word, strlen(word) - 1);
+        
+        char *token = strtok(NULL, " ");
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        
+        newCommand->other = strtok(NULL, " ()"); // Three separate delimeters
                           // (https://cplusplus.com/reference/cstring/strtok/)
-        newCommand->rB = strtok(NULL, " ");
+        char *token2 = strtok(NULL, " ");
+        strncpy(newCommand->rB, token2, strlen(token2));
       } else if (!strcmp(word, "mrmovl")) {
-        newCommand->name = word;
-        newCommand->other = strtok(NULL, " (),"); // Four separate delimeters
-        newCommand->rB = strtok(NULL, " (),");
-        newCommand->rA = strtok(NULL, " (),");
+        strncpy(newCommand->name, word, strlen(word) - 1);
+
+        char *token = strtok(NULL, " (),"); // Four separate delimeters
+        strncpy(newCommand->other, token, strlen(token));
+        
+        char *token2 = strtok(NULL, " (),");
+        strncpy(newCommand->rA, token2, strlen(token));
+
+        char *token3 = strtok(NULL, " (),");
+        strncpy(newCommand->rB, token3, strlen(token));
       }
     }
     inputnode *next;
@@ -276,7 +317,7 @@ int reg_num(char *reg) {
     @param: *list, input linked list
 */
 outputnode *assemble(inputnode *list, map *names) {
-  long memoryAddress; // Added as field for outputnode
+  int memoryAddress = 0; // Added as field for outputnode
   outputnode *ret;
   ret = malloc(sizeof(outputnode));
   outputnode *curr = ret;
@@ -285,26 +326,25 @@ outputnode *assemble(inputnode *list, map *names) {
   while (list != NULL) {
     if ((list->data)->directive == true) {
       if ((list->data)->long_or_quad == true) {
-        memoryAddress += 8;
+          memoryAddress += 8;
         // print long/quad value, need to save it when making input list
       } else if ((list->data)->pos == true) {
         memoryAddress = (list->data)->position;
         // would move on afterward
       } else if ((list->data)->align == true) {
-        memoryAddress =
-            memoryAddress + (memoryAddress % (list->data)->alignment);
+        memoryAddress = memoryAddress + (memoryAddress % (list->data)->alignment);
         // would move on afterward
       } else if ((list->data)->symbol == true) {
         (list->data)->symbolicName->address = memoryAddress;
       }
     }
+
+
     // If not directive, then it's a command, and we can just calculate its
-    curr->memoryAddress =
-        memoryAddress +
-        sizeof(
-            curr->data); // Case for if not directive, and it'd assumably set to
+                         // Case for if not directive, and it'd assumably set to
                          // a value after all directives complete at beginning
                          // of prorgram (for our case, .pos 0 -> mem starts @ 0)
+
     char *buff;
     command comm = *(list->data);
     if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
@@ -369,7 +409,9 @@ outputnode *assemble(inputnode *list, map *names) {
     curr->data = buff;
     memoryAddress =
         memoryAddress + sizeof(buff); // For case of not directive, this is how
-                                      // the memory address updates
+              
+    // the memory address updates
+    curr->memoryAddress = memoryAddress;
 
     outputnode *next;
     next = malloc(sizeof(outputnode));

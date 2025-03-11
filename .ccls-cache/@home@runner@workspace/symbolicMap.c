@@ -74,13 +74,13 @@ void printMap(map *m) {
   printf("Head: %d\n", m->head);
   printf("Tail: %d\n", m->tail);
 
-  if (m->arr && m->arr[counter] != NULL) {
-    printf("First element: %s", m->arr[counter]->name);
-  }
+  // if (m->arr && m->arr[counter] != NULL) {
+  //   printf("First element: %s", m->arr[counter]->name);
+  // }
   while (counter < m->tail) {
-    if (m->arr && m->arr[counter] != NULL) {
-      printf("%s\t%i", m->arr[counter]->name, m->arr[counter]->address);
-    }
+    // if (m->arr && m->arr[counter]) {
+    printf("%s\t%i\n", m->arr[counter]->name, m->arr[counter]->address);
+    // }
     counter++;
   }
 }
