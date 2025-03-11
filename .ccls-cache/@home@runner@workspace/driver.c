@@ -37,13 +37,13 @@ int main() {
   outputnode *print;
   char *filename = interface();
   map *symbolicNames = file_parsing(filename, startingList);
-  printMap(symbolicNames);
   print = assemble(startingList, symbolicNames);
+  printMap(symbolicNames);
 
   printf("\n\nFinal output\n\n");
   while (print != NULL) {
-    printf("0%x\t", print->memoryAddress);
-    printf("%s\n", print->data);
+    printf("0%lu\t", print->memoryAddress);
+    printf("%s\n", (print->data));
     print = print->next;
   }
 }
@@ -130,6 +130,11 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
     newCommand->rA[0] = '\0';
     newCommand->rB[0] = '\0';
     newCommand->other[0] = '\0';
+    newCommand->symbol = false;
+    newCommand->directive = false;
+    newCommand->pos = false;
+    newCommand->align = false;
+    newCommand->long_or_quad = false;
 
     curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
@@ -183,6 +188,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       newCommand->name[strlen(word) - 1] = '\0';
 
       newCommand->symbol = true;
+      newCommand->directive = true;
 
       //      printf("Symbolic name: %s\n", (newCommand->symbolicName)->name);
       //      printf("Symbolic address: %d\n",
@@ -394,7 +400,7 @@ int reg_num(char *reg) {
     @param: *list, input linked list
 */
 outputnode *assemble(inputnode *list, map *names) {
-  int memoryAddress = 0; // Added as field for outputnode
+  unsigned long memoryAddress = 0; // Added as field for outputnode
   outputnode *ret;
   ret = malloc(sizeof(outputnode));
   outputnode *curr = ret;
@@ -484,6 +490,7 @@ outputnode *assemble(inputnode *list, map *names) {
         // would move on afterward
       } else if ((list->data)->symbol == true) {
         (list->data)->symbolicName->address = memoryAddress;
+        setAddress(names, (list->data)->symbolicName->name, memoryAddress);
       }
     }
     else {

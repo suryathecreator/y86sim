@@ -31,7 +31,7 @@ typedef struct outputnode
 {
     outputnode *next;
     char *data;
-    int memoryAddress;
+    unsigned long memoryAddress;
 } outputnode;
 
 #endif
