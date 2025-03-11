@@ -17,7 +17,7 @@ typedef struct
     char *name, *rA, *rB, *other;
     bool symbol, directive, pos, align, long_or_quad; // Flag for directive, long and quad both are 8-bye values at the current memory address.
     int position, alignment; // For directives
-    long int value;
+    unsigned long value;
     element *symbolicName ; // For symbolic-name commands
 } command;
 

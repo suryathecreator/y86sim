@@ -146,7 +146,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
         char *token = strtok(NULL, " ");
-        newCommand->value = atol(token);
+//        printf("AAAAA  %s\n", token);
+        newCommand->value = strtoul(token, (char **)0, 0);
 
       } else if (!strcmp(word, ".pos")) {
         char *location = strtok(NULL, " ");
@@ -333,7 +334,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
     }
     printf("Command: Name (%s), rA (%s), rB (%s), other (%s)\n",
            newCommand->name, newCommand->rA, newCommand->rB, newCommand->other);
-    //    printf("If long, %ld is value" , newCommand->value);
+//    printf("If long, %lu is value\n", newCommand->value);
 
     inputnode *next;
     next = malloc(sizeof(inputnode));
@@ -400,22 +401,6 @@ outputnode *assemble(inputnode *list, map *names) {
   curr->data = NULL;
   curr->next = NULL;
   while (list != NULL) {
-    if ((list->data)->directive == true) {
-      if ((list->data)->long_or_quad == true) {
-        memoryAddress += 8;
-        // print long/quad value, need to save it when making input list
-      } else if ((list->data)->pos == true) {
-        memoryAddress = (list->data)->position;
-        // would move on afterward
-      } else if ((list->data)->align == true) {
-        memoryAddress =
-            memoryAddress + (memoryAddress % (list->data)->alignment);
-        // would move on afterward
-      } else if ((list->data)->symbol == true) {
-        (list->data)->symbolicName->address = memoryAddress;
-      }
-    }
-
     // If not directive, then it's a command, and we can just calculate its
     // Case for if not directive, and it'd assumably set to
     // a value after all directives complete at beginning
@@ -481,15 +466,30 @@ outputnode *assemble(inputnode *list, map *names) {
     else if (!strcmp(comm.name, "ret"))
       sprintf(buff, "%s", "90");
     else if (!strcmp(comm.name, "pushl"))
-      sprintf(buff, "A0%xf", reg_num(comm.rA));
+      sprintf(buff, "a0%xf", reg_num(comm.rA));
     else if (!strcmp(comm.name, "popl"))
-      sprintf(buff, "B0%xf", reg_num(comm.rA));
+      sprintf(buff, "b0%xf", reg_num(comm.rA));
     curr->data = buff;
     printf("Buff %s\n", buff);
-
-    memoryAddress =
-        memoryAddress + sizeof(int); // For case of not directive, this is how
+    if ((list->data)->directive == true) {
+      if ((list->data)->long_or_quad == true) {
+        memoryAddress += 8;
+        // print long/quad value, need to save it when making input list
+      } else if ((list->data)->pos == true) {
+        memoryAddress = (list->data)->position;
+        // would move on afterward
+      } else if ((list->data)->align == true) {
+        memoryAddress =
+            memoryAddress + (memoryAddress % (list->data)->alignment);
+        // would move on afterward
+      } else if ((list->data)->symbol == true) {
+        (list->data)->symbolicName->address = memoryAddress;
+      }
+    }
+    else {
+      memoryAddress += sizeof(buff); // For case of not directive, this is how
                                      // much we add to the memoryaddress.
+    }
 
     // the memory address updates
     curr->memoryAddress = memoryAddress;
