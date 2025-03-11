@@ -40,6 +40,7 @@ int main() {
   printMap(symbolicNames);
   print = assemble(startingList, symbolicNames);
 
+  printf("\n\nFinal output\n\n");
   while (print != NULL) {
         printf("0%x\t", print->memoryAddress);
         printf("%s\n", print->data);
@@ -226,62 +227,85 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "call")) {
         strncpy(newCommand->name, word, strlen(word));
-        newCommand->other = strtok(NULL, "\t");
+        newCommand->name[strlen(word)] = '\0';
+
+        char* token = strtok(NULL, "\t");
+        strncpy(newCommand->other, token, strlen(token)); // Gets next word
+        newCommand->other[strlen(token)] = '\0';
+
       } else if (!strcmp(word, "ret")) {
       strncpy(newCommand->name, word, strlen(word));
       } else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
         newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
-        
+        newCommand->rB[strlen(token2)] = '\0';
+
       } else if (!strcmp(word, "rrmovl")) {
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
         newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
+        newCommand->rB[strlen(token2)] = '\0';
+
 
       } else if (!strcmp(word, "irmovl")) {
         
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->other, token, strlen(token));
+        newCommand->other[strlen(token)] = '\0';
         
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
-        
+        newCommand->rB[strlen(token2)] = '\0';
+
       } else if (!strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
-        
+        newCommand->name[strlen(word)] = '\0';
+
         char *token = strtok(NULL, " ");
         strncpy(newCommand->rA, token, strlen(token));
         newCommand->rA[strlen(token)] = '\0';
 
-        newCommand->other = strtok(NULL, " ()"); // Three separate delimeters
-                          // (https://cplusplus.com/reference/cstring/strtok/)
+        char* token4 = strtok(NULL, " ()");// Three separate delimeters
+        // (https://cplusplus.com/reference/cstring/strtok/)
+        strncpy(newCommand->other, token4, strlen(token4)); // Gets next word
+        newCommand->other[strlen(token4)] = '\0';
+        
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
+        newCommand->rB[strlen(token2)] = '\0';
+
       } else if (!strcmp(word, "mrmovl")) {
         strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " (),"); // Four separate delimeters
         strncpy(newCommand->other, token, strlen(token));
         
         char *token2 = strtok(NULL, " (),");
-        strncpy(newCommand->rA, token2, strlen(token));
+        strncpy(newCommand->rA, token2, strlen(token2));
+        newCommand->rA[strlen(token2)] = '\0';
 
         char *token3 = strtok(NULL, " (),");
-        strncpy(newCommand->rB, token3, strlen(token));
+        strncpy(newCommand->rB, token3, strlen(token3));
+        newCommand->rB[strlen(token3)] = '\0';
+
       }
     }
     inputnode *next;
