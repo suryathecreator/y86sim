@@ -168,19 +168,19 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it
       // each time you need a next word
       if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
-        strncpy(newCommand->name, word, strlen(word) - 1); // All that's needed is to set the name of the command.
+        strncpy(newCommand->name, word, strlen(word)); // All that's needed is to set the name of the command.
       } else if (word[0] == 'j') {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         char* token = strtok(NULL, " ");
         strncpy(newCommand->other, token, strlen(token)); // Gets next word
       } else if (!strcmp(word, "cmov") || !strcmp(word, "cmovle") ||
                  !strcmp(word, "cmovl") || !strcmp(word, "cmove") ||
                  !strcmp(word, "cmovne") || !strcmp(word, "cmovge") ||
                  !strcmp(word, "cmovg")) {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
@@ -190,64 +190,64 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
                  !strcmp(
                      word,
                      "xorl")) { // Same as above, but written out for clarity.
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
       } else if (!strcmp(word, "pushl") || !strcmp(word, "popl")) {
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         
       } else if (!strcmp(word, "call")) {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         newCommand->other = strtok(NULL, "\t");
       } else if (!strcmp(word, "ret")) {
-      strncpy(newCommand->name, word, strlen(word) - 1);
+      strncpy(newCommand->name, word, strlen(word));
       } else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         
       } else if (!strcmp(word, "rrmovl")) {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
 
       } else if (!strcmp(word, "irmovl")) {
         
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->other, token, strlen(token) - 1);
+        strncpy(newCommand->other, token, strlen(token));
         
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         
       } else if (!strcmp(word, "rmmovl")) {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
         
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token) - 1);
+        strncpy(newCommand->rA, token, strlen(token));
         
         newCommand->other = strtok(NULL, " ()"); // Three separate delimeters
                           // (https://cplusplus.com/reference/cstring/strtok/)
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
       } else if (!strcmp(word, "mrmovl")) {
-        strncpy(newCommand->name, word, strlen(word) - 1);
+        strncpy(newCommand->name, word, strlen(word));
 
         char *token = strtok(NULL, " (),"); // Four separate delimeters
         strncpy(newCommand->other, token, strlen(token));
@@ -346,14 +346,17 @@ outputnode *assemble(inputnode *list, map *names) {
                          // of prorgram (for our case, .pos 0 -> mem starts @ 0)
 
     char *buff;
+    buff = malloc(sizeof(char) * 100);
+    
     command comm = *(list->data);
+    printf("Name: %s\n", comm.name);
     if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
       sprintf(buff, "%d", comm.value);
     }
     if (!strcmp(comm.name, "halt"))
-      buff = "00";
+      sprintf(buff, "%s", "00");
     else if (!strcmp(comm.name, "nop"))
-      buff = "10";
+      sprintf(buff, "%s", "10");
     else if (!strcmp(comm.name, "rrmovl"))
       sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
     else if (!strcmp(comm.name, "irmovl"))
@@ -399,9 +402,8 @@ outputnode *assemble(inputnode *list, map *names) {
     else if (!strcmp(comm.name,
                      "call")) // Hashtable for symbolic names helps here
       sprintf(buff, "80%x", findAddress(names, comm.other));
-
     else if (!strcmp(comm.name, "ret"))
-      sprintf(buff, "90");
+      sprintf(buff, "%s", "90");
     else if (!strcmp(comm.name, "pushl"))
       sprintf(buff, "A0%xf", reg_num(comm.rA));
     else if (!strcmp(comm.name, "popl"))
