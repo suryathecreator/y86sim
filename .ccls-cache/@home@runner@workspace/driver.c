@@ -32,17 +32,18 @@ map *commandLinkedList(inputnode *, Queue *, map *);
 outputnode *assemble(inputnode *, map *);
 
 int main() {
-  inputnode *startingList =
-      malloc(sizeof(inputnode)); // To print in deassembler-style later
+  inputnode *startingList = malloc(sizeof(inputnode)); // To print in deassembler-style later
   outputnode *print;
   char *filename = interface();
   map *symbolicNames = file_parsing(filename, startingList);
   print = assemble(startingList, symbolicNames);
   printMap(symbolicNames);
-
   printf("\n\nFinal output\n\n");
+  printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
+  printf("Last thing to debug: little endian/size of the instructions.");
+  
   while (print != NULL) {
-    printf("0%lu\t", print->memoryAddress);
+    printf("0x0%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
     print = print->next;
   }
@@ -111,6 +112,14 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
   bool symbolicNameCase = false;
   char *word;
 
+  /*
+  char *stackName = "Stack";
+  element* data = malloc(sizeof(element));
+  data->name = malloc(strlen(stackName)*sizeof(char) + 1);
+  data->address = 0x100;
+  add(m, data);
+  */
+  
   while (!emptyQueue(lineQueue)) {
     if (!symbolicNameCase) {
       word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
@@ -266,11 +275,16 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
       } else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
-
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
-
+        
         char *token = strtok(NULL, " ");
+        /*
+        if (*token == 'Stack,') {
+          strncpy(newCommand->rA, 0x100, strlen(token));
+        }
+        */
+        
         strncpy(newCommand->rA, token, strlen(token) - 1);
         newCommand->rA[strlen(token)] = '\0';
 
@@ -307,34 +321,49 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
-        char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token));
-        newCommand->rA[strlen(token)] = '\0';
+        char *token = strtok(NULL, " (),"); // Four separate delimeters
+        char *token2 = strtok(NULL, " (),");
+        char *token3 = strtok(NULL, " (),");
 
-        char *token4 = strtok(NULL, " ()"); // Three separate delimeters
-        // (https://cplusplus.com/reference/cstring/strtok/)
-        strncpy(newCommand->other, token4, strlen(token4)); // Gets next word
-        newCommand->other[strlen(token4)] = '\0';
+        if (token3 != NULL) {
+          strncpy(newCommand->rA, token, strlen(token));
+          newCommand->rA[strlen(token)] = '\0';
+          
+          strncpy(newCommand->other, token2, strlen(token2));
 
-        char *token2 = strtok(NULL, " ");
-        strncpy(newCommand->rB, token2, strlen(token2));
-        newCommand->rB[strlen(token2)] = '\0';
+          strncpy(newCommand->rB, token3, strlen(token3));
+          newCommand->rB[strlen(token3)] = '\0';
+        }
+        else {
+          strncpy(newCommand->rA, token, strlen(token));
+          newCommand->rA[strlen(token)] = '\0';
 
+          strncpy(newCommand->rB, token2, strlen(token2));
+          newCommand->rB[strlen(token2)] = '\0';
+        }
       } else if (!strcmp(word, "mrmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " (),"); // Four separate delimeters
-        strncpy(newCommand->other, token, strlen(token));
-
         char *token2 = strtok(NULL, " (),");
-        strncpy(newCommand->rA, token2, strlen(token2));
-        newCommand->rA[strlen(token2)] = '\0';
-
         char *token3 = strtok(NULL, " (),");
+
         if (token3 != NULL) {
+          strncpy(newCommand->other, token, strlen(token));
+
+          strncpy(newCommand->rA, token2, strlen(token2));
+          newCommand->rA[strlen(token2)] = '\0';
+
           strncpy(newCommand->rB, token3, strlen(token3));
           newCommand->rB[strlen(token3)] = '\0';
+        }
+        else {
+          strncpy(newCommand->rA, token, strlen(token));
+          newCommand->rA[strlen(token)] = '\0';
+
+          strncpy(newCommand->rB, token2, strlen(token2));
+          newCommand->rB[strlen(token2)] = '\0';
         }
       }
     }
@@ -467,7 +496,7 @@ outputnode *assemble(inputnode *list, map *names) {
     else if (!strcmp(comm.name, "cmovg"))
       sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
     else if (!strcmp(comm.name,
-                     "call")) // Hashtable for symbolic names helps here
+                     "call"))
       sprintf(buff, "80%x", findAddress(names, comm.other));
     else if (!strcmp(comm.name, "ret"))
       sprintf(buff, "%s", "90");
@@ -509,6 +538,7 @@ outputnode *assemble(inputnode *list, map *names) {
       curr->data = NULL;
       curr->next = NULL;
     }
+    
     list = list->next;
   }
   return ret;
