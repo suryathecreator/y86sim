@@ -125,6 +125,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
     } else {
       word = strtok(NULL, " ");
+      int emptyCheck = 0; // Checking if the line/strtok is empty. Might need to do command.
+      while (word[emptyCheck] == ' ' || word[emptyCheck] == '\0') {
+        emptyCheck++;
+      }
+      if (emptyCheck == strlen(word)) {
+        continue;
+      }
     }
     symbolicNameCase = false;
 
