@@ -41,13 +41,11 @@ int main() {
   print = assemble(startingList, symbolicNames);
   printMap(symbolicNames);
   printf("\n\nFinal output\n\n");
-  printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
-  printf("Last thing to debug: little endian/size of the instructions.");
   
   while (print->next != NULL) { // Null terminator of file causes an issue during assembling, so the last element will not be valid.
-    printf("0x0%lu\t", print->memoryAddress);
+    printf("%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
-    print = print->next;
+    print = print->next; 
   }
 }
 
@@ -438,8 +436,10 @@ int reg_num(char *reg) {
    commands.
     @param: *list, input linked list
 */
-outputnode *assemble(inputnode *list, map *names) {  
-  unsigned long memoryAddress = 0; // Added as field for outputnode
+outputnode *assemble(inputnode *list, map *names) {
+  unsigned long memoryWidth = 0; // Added as field for outputnode
+  int PC = 0; // Program counter
+  
   outputnode *ret;
   ret = malloc(sizeof(outputnode));
   outputnode *curr = ret;
@@ -458,104 +458,152 @@ outputnode *assemble(inputnode *list, map *names) {
     command *commPointer = list->data; // For clarity, could combine this into one line with the above.
 
     printf("Name: %s\n", comm.name);
+
+    if ((list->data)->directive == true) {
+      if ((list->data)->long_or_quad == true) {
+        memoryWidth = 8;
+        // print long/quad value, need to save it when making input list
+      } else if ((list->data)->pos == true) {
+        memoryWidth = (list->data)->position; // Note, this is a direct jump to a certain memory position.
+        PC = memoryWidth;
+      } else if ((list->data)->align == true) {
+      memoryWidth = (list->data)->alignment; // Note, this is memory alignment.
+        PC = PC + (PC % memoryWidth);
+      } else if ((list->data)->symbol == true) {
+        (list->data)->symbolicName->address = PC; // Temporary, will be changed later.
+        setAddress(names, (list->data)->symbolicName->name, memoryWidth);
+      }
+    }
+    curr->memoryAddress = PC;
+    
     if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
       sprintf(buff, "%ld", comm.value);
+      // Memory-add code **TO-DO**
     }
-    if (!strcmp(comm.name, "halt"))
+    if (!strcmp(comm.name, "halt")) {
+      memoryWidth = 2;
       sprintf(buff, "%s", "00");
-    else if (!strcmp(comm.name, "nop"))
+    }
+    else if (!strcmp(comm.name, "nop")) {
+      memoryWidth = 2;
       sprintf(buff, "%s", "10");
-    else if (!strcmp(comm.name, "rrmovl"))
+    }
+
+    else if (!strcmp(comm.name, "rrmovl")) {
+      memoryWidth = 4;
       sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "irmovl"))
+    }
+    else if (!strcmp(comm.name, "irmovl")) {
+      memoryWidth = 10;
       sprintf(buff, "30f%x%x", reg_num(comm.rB), reg_num(comm.other));
-    else if (!strcmp(comm.name, "rmmovl"))
+
+    }
+    else if (!strcmp(comm.name, "rmmovl")) {
+      memoryWidth = 10;
       sprintf(buff, "40%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
-    else if (!strcmp(comm.name, "mrmovl"))
+    }
+    else if (!strcmp(comm.name, "mrmovl")) {
+      memoryWidth = 10;
       sprintf(buff, "50%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
-    else if (!strcmp(comm.name, "addl"))
+    }
+
+    else if (!strcmp(comm.name, "addl")) {
+      memoryWidth = 4;
       sprintf(buff, "60%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "subl"))
+    }
+    else if (!strcmp(comm.name, "subl")) {
+      memoryWidth = 4;
       sprintf(buff, "61%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "andl"))
+    }
+    else if (!strcmp(comm.name, "andl")) {
+      memoryWidth = 4;
       sprintf(buff, "62%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "xorl"))
+    }
+    else if (!strcmp(comm.name, "xorl")) {
+      memoryWidth = 4;
       sprintf(buff, "63%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+  
     else if (!strcmp(comm.name, "jmp")) {
+      memoryWidth = 8;
       sprintf(buff, "70%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "jle")) {
+      memoryWidth = 8;
       sprintf(buff, "71%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "jl")) {
+      memoryWidth = 8;
       sprintf(buff, "72%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "je")) {
+      memoryWidth = 8;
       sprintf(buff, "73%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "jne")) {
+      memoryWidth = 8;
       sprintf(buff, "74%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "jge")) {
+      memoryWidth = 8;
       sprintf(buff, "75%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
     else if (!strcmp(comm.name, "jg")) {
+      memoryWidth = 8;
       sprintf(buff, "76%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
-    else if (!strcmp(comm.name, "cmovle"))
+    else if (!strcmp(comm.name, "cmovle")) {
+      memoryWidth = 4;
       sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovl"))
+    }
+    else if (!strcmp(comm.name, "cmovl")) {
+      memoryWidth = 4;
       sprintf(buff, "22%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmove"))
+    }
+    else if (!strcmp(comm.name, "cmove")) {
+      memoryWidth = 4;
       sprintf(buff, "23%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovne"))
+    }
+    else if (!strcmp(comm.name, "cmovne")) {
+      memoryWidth = 4;
       sprintf(buff, "24%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovge"))
+    }
+    else if (!strcmp(comm.name, "cmovge")) {
+      memoryWidth = 4;
       sprintf(buff, "25%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovg"))
+    }
+    else if (!strcmp(comm.name, "cmovg")) {
+      memoryWidth = 4;
       sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
     else if (!strcmp(comm.name, "call")) {
+      memoryWidth = 8;
       sprintf(buff, "80%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
     }
-    else if (!strcmp(comm.name, "ret"))
+    else if (!strcmp(comm.name, "ret")) {
+      memoryWidth = 2;
       sprintf(buff, "%s", "90");
-    else if (!strcmp(comm.name, "pushl"))
+    }
+    else if (!strcmp(comm.name, "pushl")) {
+      memoryWidth = 4;
       sprintf(buff, "a0%xf", reg_num(comm.rA));
-    else if (!strcmp(comm.name, "popl"))
+    }
+    else if (!strcmp(comm.name, "popl")) {
+      memoryWidth = 4;
       sprintf(buff, "b0%xf", reg_num(comm.rA));
+    }
     curr->data = buff;
     printf("Buff %s\n", buff);
-    if ((list->data)->directive == true) {
-      if ((list->data)->long_or_quad == true) {
-        memoryAddress += 8;
-        // print long/quad value, need to save it when making input list
-      } else if ((list->data)->pos == true) {
-        memoryAddress = (list->data)->position;
-        // would move on afterward
-      } else if ((list->data)->align == true) {
-        memoryAddress =
-            memoryAddress + (memoryAddress % (list->data)->alignment);
-        // would move on afterward
-      } else if ((list->data)->symbol == true) {
-        (list->data)->symbolicName->address = memoryAddress;
-        setAddress(names, (list->data)->symbolicName->name, memoryAddress);
-      }
-    }
-    else {
-      memoryAddress += sizeof(buff); // For case of not directive, this is how
-                                     // much we add to the memoryaddress.
-    }
 
-    // the memory address updates
-    curr->memoryAddress = memoryAddress;
+
     curr->assembly = list;
     
     if (list->next != NULL) {
@@ -566,7 +614,7 @@ outputnode *assemble(inputnode *list, map *names) {
       curr->data = NULL;
       curr->next = NULL;
     }
-    
+    PC = PC + (memoryWidth/2) + 1;
     list = list->next;
   }
 

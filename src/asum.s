@@ -3,6 +3,7 @@ init: irmovl Stack, %esp
       irmovl Stack, %ebp
       call Main
       halt
+       .align 4
 array: .long 0xd
        .long 0xc0
        .long 0xb00
