@@ -31,21 +31,21 @@ int reg_num(char *);
 map *commandLinkedList(inputnode *, Queue *, map *);
 outputnode *assemble(inputnode *, map *);
 
+map *symbolicNames;
+
 int main() {
   inputnode *startingList = malloc(sizeof(inputnode)); // To print in deassembler-style later
   outputnode *print;
   char *filename = interface();
-  map *symbolicNames = file_parsing(filename, startingList);
+  symbolicNames = file_parsing(filename, startingList);
   print = assemble(startingList, symbolicNames);
   printMap(symbolicNames);
   printf("\n\nFinal output\n\n");
-  printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
-  printf("Last thing to debug: little endian/size of the instructions.");
   
-  while (print != NULL) {
-    printf("0x0%lu\t", print->memoryAddress);
+  while (print->next != NULL) { // Null terminator of file causes an issue during assembling, so the last element will not be valid.
+    printf("%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
-    print = print->next;
+    print = print->next; 
   }
 }
 
@@ -125,6 +125,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
     } else {
       word = strtok(NULL, " ");
+      int emptyCheck = 0; // Checking if the line/strtok is empty. Might need to do command.
+      while (word[emptyCheck] == ' ' || word[emptyCheck] == '\0') {
+        emptyCheck++;
+      }
+      if (emptyCheck == strlen(word)) {
+        continue;
+      }
     }
     symbolicNameCase = false;
 
@@ -144,6 +151,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
     newCommand->pos = false;
     newCommand->align = false;
     newCommand->long_or_quad = false;
+    newCommand->usesSymbolicName = false;
 
     curr->data = newCommand; // Modifies data of first element
     curr->next = NULL;
@@ -243,15 +251,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "addl") || !strcmp(word, "subl") ||
                  !strcmp(word, "andl") ||
-                 !strcmp(
-                     word,
-                     "xorl")) { // Same as above, but written out for clarity.
+                 !strcmp(word, "xorl")) { // Same as above, but written out for clarity.
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token));
-        newCommand->rA[strlen(token)] = '\0';
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        newCommand->rA[strlen(token) - 1] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
@@ -274,16 +280,17 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
-      } else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
+        newCommand->other[strlen(word)] = '\0';
+      } /*else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
         
         char *token = strtok(NULL, " ");
-        /*
+
         if (*token == 'Stack,') {
           strncpy(newCommand->rA, 0x100, strlen(token));
         }
-        */
+
         
         strncpy(newCommand->rA, token, strlen(token) - 1);
         newCommand->rA[strlen(token)] = '\0';
@@ -291,27 +298,28 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         newCommand->rB[strlen(token2)] = '\0';
-
-      } else if (!strcmp(word, "rrmovl")) {
+        
+      }
+      */
+      else if (!strcmp(word, "rrmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token));
-        newCommand->rA[strlen(token)] = '\0';
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        newCommand->rA[strlen(token) - 1] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         newCommand->rB[strlen(token2)] = '\0';
 
       } else if (!strcmp(word, "irmovl")) {
-
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->other, token, strlen(token));
-        newCommand->other[strlen(token)] = '\0';
+        strncpy(newCommand->other, token, strlen(token) - 1);
+        newCommand->other[strlen(token) - 1] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
@@ -352,18 +360,18 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         if (token3 != NULL) {
           strncpy(newCommand->other, token, strlen(token));
 
-          strncpy(newCommand->rA, token2, strlen(token2));
-          newCommand->rA[strlen(token2)] = '\0';
-
-          strncpy(newCommand->rB, token3, strlen(token3));
-          newCommand->rB[strlen(token3)] = '\0';
-        }
-        else {
-          strncpy(newCommand->rA, token, strlen(token));
-          newCommand->rA[strlen(token)] = '\0';
-
           strncpy(newCommand->rB, token2, strlen(token2));
           newCommand->rB[strlen(token2)] = '\0';
+
+          strncpy(newCommand->rA, token3, strlen(token3));
+          newCommand->rA[strlen(token3)] = '\0';
+        }
+        else {
+          strncpy(newCommand->rB, token, strlen(token));
+          newCommand->rB[strlen(token)] = '\0';
+
+          strncpy(newCommand->rA, token2, strlen(token2));
+          newCommand->rA[strlen(token2)] = '\0';
         }
       }
     }
@@ -419,7 +427,14 @@ int reg_num(char *reg) {
     return 14;
   else if (reg[0] == '$') { // Constants/Immediate values
     return (int)strtol(reg + 1, NULL, 10);
-  } else
+  }
+  else if (strcmp(reg, "Stack") == 0) {
+    return 0x100;
+  }
+  else if (strcmp(reg, "array") == 0) {
+    return findAddress(symbolicNames, "array");
+  }
+  else
     return 15; // No register case
 }
 
@@ -429,7 +444,9 @@ int reg_num(char *reg) {
     @param: *list, input linked list
 */
 outputnode *assemble(inputnode *list, map *names) {
-  unsigned long memoryAddress = 0; // Added as field for outputnode
+  unsigned long memoryWidth = 0; // Added as field for outputnode
+  int PC = 0; // Program counter
+  
   outputnode *ret;
   ret = malloc(sizeof(outputnode));
   outputnode *curr = ret;
@@ -445,91 +462,156 @@ outputnode *assemble(inputnode *list, map *names) {
     buff = malloc(sizeof(char) * 100);
 
     command comm = *(list->data);
+    command *commPointer = list->data; // For clarity, could combine this into one line with the above.
+
     printf("Name: %s\n", comm.name);
-    if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
-      sprintf(buff, "%ld", comm.value);
-    }
-    if (!strcmp(comm.name, "halt"))
-      sprintf(buff, "%s", "00");
-    else if (!strcmp(comm.name, "nop"))
-      sprintf(buff, "%s", "10");
-    else if (!strcmp(comm.name, "rrmovl"))
-      sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "irmovl"))
-      sprintf(buff, "30f%x%x", reg_num(comm.rB), reg_num(comm.other));
-    else if (!strcmp(comm.name, "rmmovl"))
-      sprintf(buff, "40%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
-    else if (!strcmp(comm.name, "mrmovl"))
-      sprintf(buff, "50%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
-    else if (!strcmp(comm.name, "addl"))
-      sprintf(buff, "60%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "subl"))
-      sprintf(buff, "61%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "andl"))
-      sprintf(buff, "62%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "xorl"))
-      sprintf(buff, "63%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "jmp"))
-      sprintf(buff, "70%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "jle"))
-      sprintf(buff, "71%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "jl"))
-      sprintf(buff, "72%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "je"))
-      sprintf(buff, "73%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "jne"))
-      sprintf(buff, "74%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "jge"))
-      sprintf(buff, "75%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "jg"))
-      sprintf(buff, "76%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "cmovle"))
-      sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovl"))
-      sprintf(buff, "22%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmove"))
-      sprintf(buff, "23%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovne"))
-      sprintf(buff, "24%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovge"))
-      sprintf(buff, "25%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name, "cmovg"))
-      sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
-    else if (!strcmp(comm.name,
-                     "call"))
-      sprintf(buff, "80%x", findAddress(names, comm.other));
-    else if (!strcmp(comm.name, "ret"))
-      sprintf(buff, "%s", "90");
-    else if (!strcmp(comm.name, "pushl"))
-      sprintf(buff, "a0%xf", reg_num(comm.rA));
-    else if (!strcmp(comm.name, "popl"))
-      sprintf(buff, "b0%xf", reg_num(comm.rA));
-    curr->data = buff;
-    printf("Buff %s\n", buff);
+
     if ((list->data)->directive == true) {
       if ((list->data)->long_or_quad == true) {
-        memoryAddress += 8;
+        memoryWidth = 8;
         // print long/quad value, need to save it when making input list
       } else if ((list->data)->pos == true) {
-        memoryAddress = (list->data)->position;
-        // would move on afterward
+        memoryWidth = (list->data)->position; // Note, this is a direct jump to a certain memory position.
+        PC = memoryWidth;
       } else if ((list->data)->align == true) {
-        memoryAddress =
-            memoryAddress + (memoryAddress % (list->data)->alignment);
-        // would move on afterward
+      memoryWidth = (list->data)->alignment; // Note, this is memory alignment.
+        PC = PC + (PC % memoryWidth);
       } else if ((list->data)->symbol == true) {
-        (list->data)->symbolicName->address = memoryAddress;
-        setAddress(names, (list->data)->symbolicName->name, memoryAddress);
+        memoryWidth = -1; // To even out the PC++ (symbolic names don't take up memory).
+        setAddress(names, (list->data)->symbolicName->name, PC);
       }
     }
-    else {
-      memoryAddress += sizeof(buff); // For case of not directive, this is how
-                                     // much we add to the memoryaddress.
+    curr->memoryAddress = PC;
+    
+    if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
+      sprintf(buff, "%ld", comm.value);
+      // Memory-add code **TO-DO**
+    }
+    if (!strcmp(comm.name, "halt")) {
+      memoryWidth = 2;
+      sprintf(buff, "%s", "00");
+    }
+    else if (!strcmp(comm.name, "nop")) {
+      memoryWidth = 2;
+      sprintf(buff, "%s", "10");
+    }
+    else if (!strcmp(comm.name, "rrmovl")) {
+      memoryWidth = 4;
+      sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "irmovl")) {
+      memoryWidth = 10;
+      sprintf(buff, "30f%x%x", reg_num(comm.rB), reg_num(comm.other));
+
+    }
+    else if (!strcmp(comm.name, "rmmovl")) {
+      memoryWidth = 10;
+      sprintf(buff, "40%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
+    }
+    else if (!strcmp(comm.name, "mrmovl")) {
+      memoryWidth = 10;
+      sprintf(buff, "50%x%x%s", reg_num(comm.rA), reg_num(comm.rB), comm.other);
     }
 
-    // the memory address updates
-    curr->memoryAddress = memoryAddress;
+    else if (!strcmp(comm.name, "addl")) {
+      memoryWidth = 4;
+      sprintf(buff, "60%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "subl")) {
+      memoryWidth = 4;
+      sprintf(buff, "61%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "andl")) {
+      memoryWidth = 4;
+      sprintf(buff, "62%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "xorl")) {
+      memoryWidth = 4;
+      sprintf(buff, "63%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+  
+    else if (!strcmp(comm.name, "jmp")) {
+      memoryWidth = 8;
+      sprintf(buff, "70%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "jle")) {
+      memoryWidth = 8;
+      sprintf(buff, "71%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "jl")) {
+      memoryWidth = 8;
+      sprintf(buff, "72%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "je")) {
+      memoryWidth = 8;
+      sprintf(buff, "73%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "jne")) {
+      memoryWidth = 8;
+      sprintf(buff, "74%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "jge")) {
+      memoryWidth = 8;
+      sprintf(buff, "75%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "jg")) {
+      memoryWidth = 8;
+      sprintf(buff, "76%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "cmovle")) {
+      memoryWidth = 4;
+      sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "cmovl")) {
+      memoryWidth = 4;
+      sprintf(buff, "22%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "cmove")) {
+      memoryWidth = 4;
+      sprintf(buff, "23%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "cmovne")) {
+      memoryWidth = 4;
+      sprintf(buff, "24%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "cmovge")) {
+      memoryWidth = 4;
+      sprintf(buff, "25%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "cmovg")) {
+      memoryWidth = 4;
+      sprintf(buff, "26%x%x", reg_num(comm.rA), reg_num(comm.rB));
+    }
+    else if (!strcmp(comm.name, "call")) {
+      memoryWidth = 8;
+      sprintf(buff, "80%x", findAddress(names, comm.other));
+      commPointer->usesSymbolicName = true;
+    }
+    else if (!strcmp(comm.name, "ret")) {
+      memoryWidth = 2;
+      sprintf(buff, "%s", "90");
+    }
+    else if (!strcmp(comm.name, "pushl")) {
+      memoryWidth = 4;
+      sprintf(buff, "a0%xf", reg_num(comm.rA));
+    }
+    else if (!strcmp(comm.name, "popl")) {
+      memoryWidth = 4;
+      sprintf(buff, "b0%xf", reg_num(comm.rA));
+    }
+    curr->data = buff;
+    printf("Buff %s\n", buff);
 
+
+    curr->assembly = list;
+    
     if (list->next != NULL) {
       outputnode *next;
       next = malloc(sizeof(outputnode));
@@ -538,8 +620,46 @@ outputnode *assemble(inputnode *list, map *names) {
       curr->data = NULL;
       curr->next = NULL;
     }
-    
+    PC = PC + (memoryWidth/2) + 1;
     list = list->next;
+  }
+
+  // Two-pass assembler to resolve symbolic names
+  outputnode *currCopy;
+  currCopy = ret;
+  while (currCopy != NULL) {
+    char *buff;
+    buff = malloc(sizeof(char) * 100);
+    command comm = *(currCopy->assembly->data);
+    if (currCopy->assembly->data->usesSymbolicName) {
+      if (!strcmp(comm.name, "jmp")) {
+        sprintf(buff, "70%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "jle")) {
+        sprintf(buff, "71%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "jl")) {
+        sprintf(buff, "72%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "je")) {
+        sprintf(buff, "73%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "jne")) {
+        sprintf(buff, "74%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "jge")) {
+        sprintf(buff, "75%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "jg")) {
+        sprintf(buff, "76%x", findAddress(names, comm.other));
+      }
+      else if (!strcmp(comm.name, "call")) {
+        sprintf(buff, "80%x", findAddress(names, comm.other));
+        comm.usesSymbolicName = true;
+      }
+      currCopy->data = buff;
+    }
+    currCopy = currCopy->next;
   }
   return ret;
 }
