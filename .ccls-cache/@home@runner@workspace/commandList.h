@@ -15,10 +15,10 @@ typedef struct outputnode outputnode;
 typedef struct
 {
     char *name, *rA, *rB, *other;
-    bool symbol, directive, pos, align, long_or_quad; // Flag for directive, long and quad both are 8-bye values at the current memory address.
+    bool symbol, directive, pos, align, long_or_quad, usesSymbolicName; // Flag for directive, long and quad both are 8-bye values at the current memory address.
     int position, alignment; // For directives
     unsigned long value;
-    element *symbolicName ; // For symbolic-name commands
+    element *symbolicName; // For symbolic-name commands
 } command;
 
 typedef struct inputnode
@@ -29,6 +29,7 @@ typedef struct inputnode
 
 typedef struct outputnode
 {
+    inputnode *assembly; // Assembly version of the binary command for two-pass assembly/symbolic name resolution
     outputnode *next;
     char *data;
     unsigned long memoryAddress;
