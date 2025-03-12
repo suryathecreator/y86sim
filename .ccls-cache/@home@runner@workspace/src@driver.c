@@ -43,8 +43,8 @@ int main() {
   printf("\n\nFinal output\n\n");
   printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
   printf("Last thing to debug: little endian/size of the instructions.");
-
-  while (print != NULL) {
+  
+  while (print->next != NULL) { // Null terminator of file causes an issue during assembling, so the last element will not be valid.
     printf("0x0%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
     print = print->next;
@@ -121,7 +121,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
   data->address = 0x100;
   add(m, data);
   */
-
+  
   while (!emptyQueue(lineQueue)) {
     if (!symbolicNameCase) {
       word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
@@ -215,8 +215,12 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it
       // each time you need a next word
       if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
-        strncpy(newCommand->name, word, strlen(word)); // All that's needed is to set the name of the command.
+        strncpy(
+            newCommand->name, word,
+            strlen(
+                word)); // All that's needed is to set the name of the command.
         newCommand->name[strlen(word)] = '\0';
+
       } else if (word[0] == 'j') {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
@@ -271,25 +275,25 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
-        newCommand->name[strlen(word)] = '\0';
+        newCommand->other[strlen(word)] = '\0';
       } /*else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
-
+        
         char *token = strtok(NULL, " ");
 
         if (*token == 'Stack,') {
           strncpy(newCommand->rA, 0x100, strlen(token));
         }
 
-
+        
         strncpy(newCommand->rA, token, strlen(token) - 1);
         newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         newCommand->rB[strlen(token2)] = '\0';
-
+        
       }
       */
       else if (!strcmp(word, "rrmovl")) {
@@ -327,7 +331,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         if (token3 != NULL) {
           strncpy(newCommand->rA, token, strlen(token));
           newCommand->rA[strlen(token)] = '\0';
-
+          
           strncpy(newCommand->other, token2, strlen(token2));
 
           strncpy(newCommand->rB, token3, strlen(token3));
@@ -441,7 +445,7 @@ outputnode *assemble(inputnode *list, map *names) {
   outputnode *curr = ret;
   curr->data = NULL;
   curr->next = NULL;
-  while (list->next != NULL) {
+  while (list != NULL) {
     // If not directive, then it's a command, and we can just calculate its
     // Case for if not directive, and it'd assumably set to
     // a value after all directives complete at beginning
@@ -553,7 +557,7 @@ outputnode *assemble(inputnode *list, map *names) {
     // the memory address updates
     curr->memoryAddress = memoryAddress;
     curr->assembly = list;
-
+    
     if (list->next != NULL) {
       outputnode *next;
       next = malloc(sizeof(outputnode));
@@ -562,7 +566,7 @@ outputnode *assemble(inputnode *list, map *names) {
       curr->data = NULL;
       curr->next = NULL;
     }
-
+    
     list = list->next;
   }
 

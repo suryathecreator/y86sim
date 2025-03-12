@@ -44,7 +44,7 @@ int main() {
   printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
   printf("Last thing to debug: little endian/size of the instructions.");
   
-  while (print != NULL) {
+  while (print->next != NULL) { // Null terminator of file causes an issue during assembling, so the last element will not be valid.
     printf("0x0%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
     print = print->next;
@@ -275,6 +275,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
+        newCommand->other[strlen(word)] = '\0';
       } /*else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
