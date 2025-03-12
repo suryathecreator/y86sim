@@ -12,7 +12,7 @@ typedef struct element element; // Forward declaration required by C
 
 typedef struct element {
      char *name;
-     int address;
+     unsigned long address;
      element *next;
 } element;
 

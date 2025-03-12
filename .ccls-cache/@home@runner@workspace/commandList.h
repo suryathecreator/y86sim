@@ -16,7 +16,8 @@ typedef struct
 {
     char *name, *rA, *rB, *other;
     bool symbol, directive, pos, align, long_or_quad; // Flag for directive, long and quad both are 8-bye values at the current memory address.
-    int position, alignment, value; // For directives
+    int position, alignment; // For directives
+    unsigned long value;
     element *symbolicName ; // For symbolic-name commands
 } command;
 
@@ -30,7 +31,7 @@ typedef struct outputnode
 {
     outputnode *next;
     char *data;
-    int memoryAddress;
+    unsigned long memoryAddress;
 } outputnode;
 
 #endif

@@ -17,6 +17,7 @@ bool full(map *);
 bool add(map *, element *);
 bool del(map *);
 int findAddress(map *, char *);
+bool setAddress(map *, char *, unsigned long);
 
 // Constructor
 map *mapCreation(int size) {
@@ -65,6 +66,17 @@ int findAddress(map *m, char *name) {
   }
   return -1;
 }
+bool setAddress(map *m, char *name, unsigned long newAddress) {
+  int counter = m->head;
+  while (counter < m->tail) {
+    if (!strcmp(m->arr[counter]->name, name)) {
+      m->arr[counter]->address = newAddress;
+      return true;
+    }
+    counter++;
+  }
+  return false;
+}
 // Map-finding (hashmap better than this, but may take a while to implement, so
 // this is future work) Goal is not efficient, but rather to implement the
 // emulator.
@@ -79,7 +91,7 @@ void printMap(map *m) {
   // }
   while (counter < m->tail) {
     // if (m->arr && m->arr[counter]) {
-    printf("%s\t%i\n", m->arr[counter]->name, m->arr[counter]->address);
+    printf("%s\t%lu\n", m->arr[counter]->name, m->arr[counter]->address);
     // }
     counter++;
   }
