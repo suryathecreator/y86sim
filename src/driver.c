@@ -470,8 +470,8 @@ outputnode *assemble(inputnode *list, map *names) {
       memoryWidth = (list->data)->alignment; // Note, this is memory alignment.
         PC = PC + (PC % memoryWidth);
       } else if ((list->data)->symbol == true) {
-        (list->data)->symbolicName->address = PC; // Temporary, will be changed later.
-        setAddress(names, (list->data)->symbolicName->name, memoryWidth);
+        memoryWidth = -1; // To even out the PC++ (symbolic names don't take up memory).
+        setAddress(names, (list->data)->symbolicName->name, PC);
       }
     }
     curr->memoryAddress = PC;
@@ -488,7 +488,6 @@ outputnode *assemble(inputnode *list, map *names) {
       memoryWidth = 2;
       sprintf(buff, "%s", "10");
     }
-
     else if (!strcmp(comm.name, "rrmovl")) {
       memoryWidth = 4;
       sprintf(buff, "20%x%x", reg_num(comm.rA), reg_num(comm.rB));
