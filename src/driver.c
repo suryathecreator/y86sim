@@ -34,25 +34,16 @@ outputnode *assemble(inputnode *, map *);
 map *symbolicNames;
 
 int main() {
-  inputnode *startingList =
-      malloc(sizeof(inputnode)); // To print in deassembler-style later
+  inputnode *startingList = malloc(sizeof(inputnode)); // To print in deassembler-style later
   outputnode *print;
   char *filename = interface();
   symbolicNames = file_parsing(filename, startingList);
   print = assemble(startingList, symbolicNames);
   printMap(symbolicNames);
   printf("\n\nFinal output\n\n");
-  printf("Note that the address code is commented out to quickly analyze the "
-         "instruction strings. \n The stack register will come up as F (not "
-         "100) for similar reasons, and the symbolic name code is also "
-         "commented out for now -- (they'll show up as 0 for now).");
+  printf("Note that the address code is commented out to quickly analyze the instruction strings. \n The stack register will come up as F (not 100) for similar reasons, and the symbolic name code is also commented out for now -- (they'll show up as 0 for now).");
   printf("Last thing to debug: little endian/size of the instructions.");
-
-  while (startingList != NULL) {
-    printf("0x0%s\t", startingList->data->name);
-    startingList = startingList->next;
-  }
-
+  
   while (print != NULL) {
     printf("0x0%lu\t", print->memoryAddress);
     printf("%s\n", (print->data));
@@ -130,7 +121,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
   data->address = 0x100;
   add(m, data);
   */
-
+  
   while (!emptyQueue(lineQueue)) {
     if (!symbolicNameCase) {
       word = strtok(dequeue(lineQueue), " "); // Tokenize line into words
@@ -172,7 +163,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
         char *token = strtok(NULL, " ");
-        //        printf("AAAAA  %s\n", token);
+//        printf("AAAAA  %s\n", token);
         newCommand->value = strtoul(token, (char **)0, 0);
 
       } else if (!strcmp(word, ".pos")) {
@@ -229,6 +220,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
             strlen(
                 word)); // All that's needed is to set the name of the command.
         newCommand->name[strlen(word)] = '\0';
+
       } else if (word[0] == 'j') {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
@@ -254,9 +246,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "addl") || !strcmp(word, "subl") ||
                  !strcmp(word, "andl") ||
-                 !strcmp(
-                     word,
-                     "xorl")) { // Same as above, but written out for clarity.
+                 !strcmp(word, "xorl")) { // Same as above, but written out for clarity.
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
@@ -285,25 +275,24 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
-        newCommand->name[strlen(word)] = '\0';
       } /*else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
-
+        
         char *token = strtok(NULL, " ");
 
         if (*token == 'Stack,') {
           strncpy(newCommand->rA, 0x100, strlen(token));
         }
 
-
+        
         strncpy(newCommand->rA, token, strlen(token) - 1);
         newCommand->rA[strlen(token)] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
         newCommand->rB[strlen(token2)] = '\0';
-
+        
       }
       */
       else if (!strcmp(word, "rrmovl")) {
@@ -341,12 +330,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         if (token3 != NULL) {
           strncpy(newCommand->rA, token, strlen(token));
           newCommand->rA[strlen(token)] = '\0';
-
+          
           strncpy(newCommand->other, token2, strlen(token2));
 
           strncpy(newCommand->rB, token3, strlen(token3));
           newCommand->rB[strlen(token3)] = '\0';
-        } else {
+        }
+        else {
           strncpy(newCommand->rA, token, strlen(token));
           newCommand->rA[strlen(token)] = '\0';
 
@@ -369,7 +359,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
           strncpy(newCommand->rA, token3, strlen(token3));
           newCommand->rA[strlen(token3)] = '\0';
-        } else {
+        }
+        else {
           strncpy(newCommand->rB, token, strlen(token));
           newCommand->rB[strlen(token)] = '\0';
 
@@ -380,14 +371,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
     }
     printf("Command: Name (%s), rA (%s), rB (%s), other (%s)\n",
            newCommand->name, newCommand->rA, newCommand->rB, newCommand->other);
-    //    printf("If long, %lu is value\n", newCommand->value);
+//    printf("If long, %lu is value\n", newCommand->value);
 
     inputnode *next;
     next = malloc(sizeof(inputnode));
     curr->next = next;
     curr = curr->next;
     curr->data = newCommand;
-    curr->data = NULL;
     curr->next = NULL;
   }
   return m;
@@ -431,11 +421,14 @@ int reg_num(char *reg) {
     return 14;
   else if (reg[0] == '$') { // Constants/Immediate values
     return (int)strtol(reg + 1, NULL, 10);
-  } else if (strcmp(reg, "Stack") == 0) {
+  }
+  else if (strcmp(reg, "Stack") == 0) {
     return 0x100;
-  } else if (strcmp(reg, "array") == 0) {
+  }
+  else if (strcmp(reg, "array") == 0) {
     return findAddress(symbolicNames, "array");
-  } else
+  }
+  else
     return 15; // No register case
 }
 
@@ -444,16 +437,14 @@ int reg_num(char *reg) {
    commands.
     @param: *list, input linked list
 */
-outputnode *assemble(inputnode *list, map *names) {
-  inputnode nullTermCheck = {0x0, 0x0};
-
+outputnode *assemble(inputnode *list, map *names) {  
   unsigned long memoryAddress = 0; // Added as field for outputnode
   outputnode *ret;
   ret = malloc(sizeof(outputnode));
   outputnode *curr = ret;
   curr->data = NULL;
   curr->next = NULL;
-  while (list->next != NULL) {
+  while (list != NULL) {
     // If not directive, then it's a command, and we can just calculate its
     // Case for if not directive, and it'd assumably set to
     // a value after all directives complete at beginning
@@ -463,8 +454,7 @@ outputnode *assemble(inputnode *list, map *names) {
     buff = malloc(sizeof(char) * 100);
 
     command comm = *(list->data);
-    command *commPointer = list->data; // For clarity, could combine this into
-                                       // one line with the above.
+    command *commPointer = list->data; // For clarity, could combine this into one line with the above.
 
     printf("Name: %s\n", comm.name);
     if (!strcmp(comm.name, ".long") || !strcmp(comm.name, ".quad")) {
@@ -493,25 +483,32 @@ outputnode *assemble(inputnode *list, map *names) {
     else if (!strcmp(comm.name, "jmp")) {
       sprintf(buff, "70%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "jle")) {
+    }
+    else if (!strcmp(comm.name, "jle")) {
       sprintf(buff, "71%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "jl")) {
+    }
+    else if (!strcmp(comm.name, "jl")) {
       sprintf(buff, "72%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "je")) {
+    }
+    else if (!strcmp(comm.name, "je")) {
       sprintf(buff, "73%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "jne")) {
+    }
+    else if (!strcmp(comm.name, "jne")) {
       sprintf(buff, "74%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "jge")) {
+    }
+    else if (!strcmp(comm.name, "jge")) {
       sprintf(buff, "75%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "jg")) {
+    }
+    else if (!strcmp(comm.name, "jg")) {
       sprintf(buff, "76%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "cmovle"))
+    }
+    else if (!strcmp(comm.name, "cmovle"))
       sprintf(buff, "21%x%x", reg_num(comm.rA), reg_num(comm.rB));
     else if (!strcmp(comm.name, "cmovl"))
       sprintf(buff, "22%x%x", reg_num(comm.rA), reg_num(comm.rB));
@@ -526,7 +523,8 @@ outputnode *assemble(inputnode *list, map *names) {
     else if (!strcmp(comm.name, "call")) {
       sprintf(buff, "80%x", findAddress(names, comm.other));
       commPointer->usesSymbolicName = true;
-    } else if (!strcmp(comm.name, "ret"))
+    }
+    else if (!strcmp(comm.name, "ret"))
       sprintf(buff, "%s", "90");
     else if (!strcmp(comm.name, "pushl"))
       sprintf(buff, "a0%xf", reg_num(comm.rA));
@@ -549,7 +547,8 @@ outputnode *assemble(inputnode *list, map *names) {
         (list->data)->symbolicName->address = memoryAddress;
         setAddress(names, (list->data)->symbolicName->name, memoryAddress);
       }
-    } else {
+    }
+    else {
       memoryAddress += sizeof(buff); // For case of not directive, this is how
                                      // much we add to the memoryaddress.
     }
@@ -557,7 +556,7 @@ outputnode *assemble(inputnode *list, map *names) {
     // the memory address updates
     curr->memoryAddress = memoryAddress;
     curr->assembly = list;
-
+    
     if (list->next != NULL) {
       outputnode *next;
       next = malloc(sizeof(outputnode));
@@ -566,6 +565,7 @@ outputnode *assemble(inputnode *list, map *names) {
       curr->data = NULL;
       curr->next = NULL;
     }
+    
     list = list->next;
   }
 
@@ -579,19 +579,26 @@ outputnode *assemble(inputnode *list, map *names) {
     if (currCopy->assembly->data->usesSymbolicName) {
       if (!strcmp(comm.name, "jmp")) {
         sprintf(buff, "70%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "jle")) {
+      }
+      else if (!strcmp(comm.name, "jle")) {
         sprintf(buff, "71%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "jl")) {
+      }
+      else if (!strcmp(comm.name, "jl")) {
         sprintf(buff, "72%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "je")) {
+      }
+      else if (!strcmp(comm.name, "je")) {
         sprintf(buff, "73%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "jne")) {
+      }
+      else if (!strcmp(comm.name, "jne")) {
         sprintf(buff, "74%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "jge")) {
+      }
+      else if (!strcmp(comm.name, "jge")) {
         sprintf(buff, "75%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "jg")) {
+      }
+      else if (!strcmp(comm.name, "jg")) {
         sprintf(buff, "76%x", findAddress(names, comm.other));
-      } else if (!strcmp(comm.name, "call")) {
+      }
+      else if (!strcmp(comm.name, "call")) {
         sprintf(buff, "80%x", findAddress(names, comm.other));
         comm.usesSymbolicName = true;
       }
