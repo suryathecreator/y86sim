@@ -31,11 +31,13 @@ int reg_num(char *);
 map *commandLinkedList(inputnode *, Queue *, map *);
 outputnode *assemble(inputnode *, map *);
 
+map *symbolicNames;
+
 int main() {
   inputnode *startingList = malloc(sizeof(inputnode)); // To print in deassembler-style later
   outputnode *print;
   char *filename = interface();
-  map *symbolicNames = file_parsing(filename, startingList);
+  symbolicNames = file_parsing(filename, startingList);
   print = assemble(startingList, symbolicNames);
   printMap(symbolicNames);
   printf("\n\nFinal output\n\n");
@@ -244,15 +246,13 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "addl") || !strcmp(word, "subl") ||
                  !strcmp(word, "andl") ||
-                 !strcmp(
-                     word,
-                     "xorl")) { // Same as above, but written out for clarity.
+                 !strcmp(word, "xorl")) { // Same as above, but written out for clarity.
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
 
         char *token = strtok(NULL, " ");
-        strncpy(newCommand->rA, token, strlen(token));
-        newCommand->rA[strlen(token)] = '\0';
+        strncpy(newCommand->rA, token, strlen(token) - 1);
+        newCommand->rA[strlen(token) - 1] = '\0';
 
         char *token2 = strtok(NULL, " ");
         strncpy(newCommand->rB, token2, strlen(token2));
@@ -293,7 +293,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         strncpy(newCommand->rB, token2, strlen(token2));
         newCommand->rB[strlen(token2)] = '\0';
         
-      } 
+      }
       */
       else if (!strcmp(word, "rrmovl")) {
         strncpy(newCommand->name, word, strlen(word));
@@ -354,18 +354,18 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
         if (token3 != NULL) {
           strncpy(newCommand->other, token, strlen(token));
 
-          strncpy(newCommand->rA, token2, strlen(token2));
-          newCommand->rA[strlen(token2)] = '\0';
-
-          strncpy(newCommand->rB, token3, strlen(token3));
-          newCommand->rB[strlen(token3)] = '\0';
-        }
-        else {
-          strncpy(newCommand->rA, token, strlen(token));
-          newCommand->rA[strlen(token)] = '\0';
-
           strncpy(newCommand->rB, token2, strlen(token2));
           newCommand->rB[strlen(token2)] = '\0';
+
+          strncpy(newCommand->rA, token3, strlen(token3));
+          newCommand->rA[strlen(token3)] = '\0';
+        }
+        else {
+          strncpy(newCommand->rB, token, strlen(token));
+          newCommand->rB[strlen(token)] = '\0';
+
+          strncpy(newCommand->rA, token2, strlen(token2));
+          newCommand->rA[strlen(token2)] = '\0';
         }
       }
     }
@@ -424,6 +424,9 @@ int reg_num(char *reg) {
   }
   else if (strcmp(reg, "Stack") == 0) {
     return 0x100;
+  }
+  else if (strcmp(reg, "array") == 0) {
+    return findAddress(symbolicNames, "array");
   }
   else
     return 15; // No register case
