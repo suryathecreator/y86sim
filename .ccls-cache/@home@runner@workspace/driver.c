@@ -215,12 +215,8 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
       // Here, we'd use "strtok(NULL, "\t"); to get each next word, i.e. do it
       // each time you need a next word
       if (!strcmp(word, "halt") || !strcmp(word, "nop")) {
-        strncpy(
-            newCommand->name, word,
-            strlen(
-                word)); // All that's needed is to set the name of the command.
+        strncpy(newCommand->name, word, strlen(word)); // All that's needed is to set the name of the command.
         newCommand->name[strlen(word)] = '\0';
-
       } else if (word[0] == 'j') {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
@@ -275,6 +271,7 @@ map *commandLinkedList(inputnode *list, Queue *lineQueue, map *m) {
 
       } else if (!strcmp(word, "ret")) {
         strncpy(newCommand->name, word, strlen(word));
+        newCommand->name[strlen(word)] = '\0';
       } /*else if (!strcmp(word, "irmovl") || !strcmp(word, "rmmovl")) {
         strncpy(newCommand->name, word, strlen(word));
         newCommand->name[strlen(word)] = '\0';
